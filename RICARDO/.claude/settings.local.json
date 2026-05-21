@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep -l \"vehicle\\\\|Vehicle\")",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/auth/login-json -H \"Content-Type: application/json\" -d '{\"email\":\"cliente@autoserv.com\",\"password\":\"cliente123\"}')",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/auth/login-json -H \"Content-Type: application/json\" -d '{\"email\":\"admin@autoserv.com\",\"password\":\"admin123\"}')",
+      "Bash(curl -s http://127.0.0.1:8000/api/services/public)",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import sys, json; data=json.load\\(sys.stdin\\); avail=[s for s in data if s['available']]; print\\(f'{len\\(avail\\)} slots available; first: {avail[0] if avail else None}'\\)\")",
+      "PowerShell(try { \\(Invoke-WebRequest -Uri http://localhost:4200 -UseBasicParsing -TimeoutSec 5\\).StatusCode } catch { \"ERROR: $_\" }; try { \\(Invoke-WebRequest -Uri http://127.0.0.1:8000/ -UseBasicParsing -TimeoutSec 5\\).StatusCode } catch { \"ERROR: $_\" })",
+      "Bash(Get-ChildItem \"C:\\\\VC\\\\borrar2\\\\RICARDO\" -Recurse -Directory -Depth 2)",
+      "Bash(Format-List FullName)",
+      "Bash(xargs grep -l \"filter\\\\|badge\\\\|status\")",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/auth/login-json -H 'Content-Type: application/json' -d '{\\\\\"email\\\\\":\\\\\"admin@autoserv.com\\\\\",\\\\\"password\\\\\":\\\\\"admin123\\\\\"}')",
+      "Bash(curl -s http://127.0.0.1:8000/api/schedules -H \"Authorization: Bearer $\\(curl -s -X POST http://127.0.0.1:8000/api/auth/login-json -H 'Content-Type: application/json' -d '{\\\\\"email\\\\\":\\\\\"admin@autoserv.com\\\\\",\\\\\"password\\\\\":\\\\\"admin123\\\\\"}')",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }; Write-Output \"killed\")",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s -X POST http://127.0.0.1:8000/api/auth/login-json -H \"Content-Type: application/json\" -d '{\"email\":\"mecanico@autoserv.com\",\"password\":\"mecanico123\"}')",
+      "PowerShell(try { \\(Invoke-WebRequest -Uri http://localhost:4200 -UseBasicParsing -TimeoutSec 5\\).StatusCode } catch { \"ERROR\" }; try { \\(Invoke-WebRequest -Uri http://127.0.0.1:8000/ -UseBasicParsing -TimeoutSec 5\\).StatusCode } catch { \"ERROR\" })"
+    ]
+  }
+}

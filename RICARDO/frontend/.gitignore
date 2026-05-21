@@ -1,0 +1,7 @@
+# Archivos a ignorar por git en el frontend
+node_modules/
+dist/
+.angular/
+*.log
+.env
+.env.local

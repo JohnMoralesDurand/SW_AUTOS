@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-Process | Where-Object { $_.ProcessName -eq \"python\" } | Select-Object Id, ProcessName, StartTime | Format-Table)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/)",
+      "Bash(curl -s http://localhost:8000/api/services/public)",
+      "Bash(curl -s -o /dev/null -w \"Frontend / : %{http_code}\\\\nLanding chunk: \" http://localhost:4200/)",
+      "Bash(curl -s http://localhost:4200/)",
+      "Bash(grep -r \"Hello, frontend\\\\|Hello, {\" c:/RICARDO/frontend/src)",
+      "Bash(curl -s -H \"Cache-Control: no-cache\" -H \"Pragma: no-cache\" \"http://localhost:4200/?v=$\\(date +%s\\)\")",
+      "Bash(npm start *)",
+      "Bash(npm list *)",
+      "PowerShell(Get-Process -Name \"node\" -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle -or $true } | Select-Object Id, ProcessName, StartTime | Format-Table -AutoSize)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 4200 -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Id 22728 -Force)",
+      "PowerShell(Stop-Process -Id 16800 -Force -ErrorAction SilentlyContinue)",
+      "PowerShell(try { \\(Invoke-WebRequest -Uri http://localhost:4200 -UseBasicParsing -TimeoutSec 5\\).StatusCode } catch { \"ERROR: $_\" })",
+      "PowerShell(python --version)",
+      "PowerShell(python -m venv \"c:\\\\VC\\\\borrar2\\\\RICARDO\\\\backend\\\\venv\")",
+      "PowerShell(& \"c:\\\\VC\\\\borrar2\\\\RICARDO\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" -m pip install --upgrade pip 2>&1)",
+      "PowerShell(& \"c:\\\\VC\\\\borrar2\\\\RICARDO\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" -m pip install -r \"c:\\\\VC\\\\borrar2\\\\RICARDO\\\\backend\\\\requirements.txt\" 2>&1)",
+      "Bash(\"c:\\\\VC\\\\borrar2\\\\RICARDO\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" run.py)",
+      "Bash(curl -s http://127.0.0.1:8000/)",
+      "Bash(Get-ChildItem -Path \"c:\\\\VC\\\\borrar2\\\\RICARDO\\\\backend\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)",
+      "Bash(Get-ChildItem -Path \"c:\\\\VC\\\\borrar2\\\\RICARDO\\\\frontend\\\\src\\\\app\" -Recurse -Directory)",
+      "Bash(Select-Object -First 30)"
+    ]
+  }
+}

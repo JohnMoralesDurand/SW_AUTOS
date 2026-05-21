@@ -1,0 +1,192 @@
+<!-- Plantilla del feature de gestión de usuarios -->
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-800">Usuarios</h2>
+      <p class="text-sm text-slate-500">Administre los usuarios del sistema y registre nuevos mecánicos.</p>
+    </div>
+    <button (click)="toggleForm()" class="btn-primary">
+      <lucide-icon [img]="userPlusIcon" [size]="18"></lucide-icon>
+      Nuevo mecánico
+    </button>
+  </div>
+
+  <!-- Filtros por rol con colores semánticos (consistentes con los badges) -->
+  <div class="flex flex-wrap gap-2">
+    <button
+      (click)="onFilter('')"
+      class="chip chip-neutral"
+      [class.is-active]="roleFilter() === ''"
+    >
+      Todos
+    </button>
+    <button
+      (click)="onFilter('client')"
+      class="chip chip-info"
+      [class.is-active]="roleFilter() === 'client'"
+    >
+      Clientes
+    </button>
+    <button
+      (click)="onFilter('mechanic')"
+      class="chip chip-success"
+      [class.is-active]="roleFilter() === 'mechanic'"
+    >
+      Mecánicos
+    </button>
+    <button
+      (click)="onFilter('admin')"
+      class="chip chip-warning"
+      [class.is-active]="roleFilter() === 'admin'"
+    >
+      Administradores
+    </button>
+  </div>
+
+  <!-- Formulario para crear mecánico -->
+  @if (showForm()) {
+    <div class="card">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">Registrar nuevo mecánico</h3>
+        <button (click)="toggleForm()" class="text-slate-500 hover:text-slate-700" aria-label="Cerrar">
+          <lucide-icon [img]="closeIcon" [size]="20"></lucide-icon>
+        </button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid grid-cols-1 gap-4 md:grid-cols-2" novalidate>
+        <div>
+          <label class="form-label">Nombres <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="first_name" class="form-input" [class.border-red-300]="fieldHasError('first_name')" />
+          @if (fieldHasError('first_name')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('first_name') }}</p>
+          }
+        </div>
+        <div>
+          <label class="form-label">Apellidos <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="last_name" class="form-input" [class.border-red-300]="fieldHasError('last_name')" />
+          @if (fieldHasError('last_name')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('last_name') }}</p>
+          }
+        </div>
+        <div>
+          <label class="form-label">DNI <span class="text-red-500">*</span></label>
+          <input type="text" formControlName="dni" maxlength="8" class="form-input" [class.border-red-300]="fieldHasError('dni')" />
+          @if (fieldHasError('dni')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('dni') }}</p>
+          }
+        </div>
+        <div>
+          <label class="form-label">Teléfono</label>
+          <input type="text" formControlName="phone" class="form-input" placeholder="999999999" [class.border-red-300]="fieldHasError('phone')" />
+          @if (fieldHasError('phone')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('phone') }}</p>
+          }
+        </div>
+        <div>
+          <label class="form-label">Correo <span class="text-red-500">*</span></label>
+          <input type="email" formControlName="email" class="form-input" placeholder="ejemplo@correo.com" [class.border-red-300]="fieldHasError('email')" />
+          @if (fieldHasError('email')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('email') }}</p>
+          }
+        </div>
+        <div>
+          <label class="form-label">Contraseña <span class="text-red-500">*</span></label>
+          <input type="password" formControlName="password" class="form-input" [class.border-red-300]="fieldHasError('password')" />
+          @if (fieldHasError('password')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('password') }}</p>
+          }
+        </div>
+        <div>
+          <label class="form-label">Especialidad <span class="text-red-500">*</span></label>
+          <select
+            formControlName="specialty"
+            class="form-input"
+            [class.border-red-300]="fieldHasError('specialty')"
+          >
+            <option value="" disabled>-- Seleccione una especialidad --</option>
+            @for (cat of specialties(); track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+          @if (fieldHasError('specialty')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('specialty') }}</p>
+          }
+          <p class="mt-1 text-xs text-slate-500">
+            Las opciones provienen de las categorías del catálogo de servicios.
+          </p>
+        </div>
+        <div>
+          <label class="form-label">Horario laboral</label>
+          <input
+            type="text"
+            formControlName="work_schedule"
+            class="form-input"
+            placeholder="Lunes a Sábado 8-17"
+          />
+        </div>
+
+        @if (errorMessage()) {
+          <div class="md:col-span-2 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            <lucide-icon [img]="alertIcon" [size]="16"></lucide-icon>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        }
+
+        <div class="md:col-span-2 flex justify-end gap-2">
+          <button type="button" (click)="toggleForm()" class="btn-outline">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="loading()">
+            {{ loading() ? 'Guardando...' : 'Crear mecánico' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- Listado de usuarios -->
+  <div class="card overflow-x-auto">
+    @if (users().length === 0) {
+      <p class="py-8 text-center text-sm text-slate-500">No se encontraron usuarios.</p>
+    } @else {
+      <table class="table-base">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>DNI</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr>
+              <td>{{ user.first_name }} {{ user.last_name }}</td>
+              <td class="font-mono text-xs">{{ user.dni }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.phone || '—' }}</td>
+              <td>
+                <span class="badge {{ getRoleClass(user.role) }}">
+                  {{ getRoleLabel(user.role) }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [class.badge-success]="user.is_active" [class.badge-danger]="!user.is_active">
+                  {{ user.is_active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="text-right">
+                <button (click)="onToggleStatus(user)" class="text-mint-700 hover:text-mint-900" [title]="user.is_active ? 'Desactivar' : 'Activar'">
+                  <lucide-icon
+                    [img]="user.is_active ? toggleOnIcon : toggleOffIcon"
+                    [size]="22"
+                  ></lucide-icon>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>

@@ -1,0 +1,179 @@
+<!-- Plantilla del feature de Órdenes de Trabajo -->
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-800">Órdenes de trabajo</h2>
+      <p class="text-sm text-slate-500">Gestione el diagnóstico, repuestos y cierre de cada orden.</p>
+    </div>
+    <div class="rounded-xl bg-mint-100 p-3 text-mint-700">
+      <lucide-icon [img]="clipboardIcon" [size]="22"></lucide-icon>
+    </div>
+  </div>
+
+  <!-- Filtros con colores semánticos -->
+  <div class="flex flex-wrap gap-2">
+    <button (click)="setFilter('all')" class="chip chip-neutral" [class.is-active]="statusFilter() === 'all'">
+      Todas
+    </button>
+    <button (click)="setFilter('open')" class="chip chip-info" [class.is-active]="statusFilter() === 'open'">
+      Abiertas
+    </button>
+    <button (click)="setFilter('closed')" class="chip chip-success" [class.is-active]="statusFilter() === 'closed'">
+      Cerradas
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+      <lucide-icon [img]="alertIcon" [size]="16"></lucide-icon>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- Listado de órdenes -->
+  <div class="space-y-4">
+    @for (order of filteredOrders(); track order.id) {
+      <div class="card">
+        <!-- Cabecera de la orden -->
+        <div class="flex flex-wrap items-center justify-between gap-3 cursor-pointer" (click)="toggleExpanded(order)">
+          <div class="flex items-center gap-3">
+            <div class="rounded-xl bg-mint-100 p-2 text-mint-700">
+              <lucide-icon [img]="clipboardIcon" [size]="18"></lucide-icon>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-800">Orden #{{ order.display_number ?? order.id }}</p>
+              <p class="text-xs text-slate-500">
+                Cita #{{ order.appointment_id }} · creada {{ order.created_at | date: 'short' }}
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-sm font-semibold text-slate-700">
+              S/ {{ order.total_amount | number: '1.2-2' }}
+            </span>
+            <span class="badge" [class.badge-info]="order.status === 'open'" [class.badge-success]="order.status === 'closed'">
+              {{ order.status === 'open' ? 'Abierta' : 'Cerrada' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Detalle expandido -->
+        @if (expandedId() === order.id) {
+          <div class="mt-4 space-y-4 border-t border-mint-100 pt-4">
+
+            <!-- Diagnóstico -->
+            <div>
+              <label class="form-label">Diagnóstico técnico (RF-25)</label>
+              <textarea
+                rows="3"
+                class="form-input"
+                [ngModel]="diagnosisDraft()"
+                (ngModelChange)="diagnosisDraft.set($event)"
+                [disabled]="order.status === 'closed'"
+                placeholder="Describa el problema detectado y la solución aplicada..."
+              ></textarea>
+              @if (order.status === 'open') {
+                <div class="mt-2 flex justify-end">
+                  <button (click)="saveDiagnosis(order)" class="btn-outline" [disabled]="savingDiagnosis()">
+                    <lucide-icon [img]="saveIcon" [size]="16"></lucide-icon>
+                    {{ savingDiagnosis() ? 'Guardando...' : 'Guardar diagnóstico' }}
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Items / repuestos -->
+            <div>
+              <h4 class="mb-2 text-sm font-semibold text-slate-700">Repuestos y cargos (RF-26)</h4>
+              @if (order.items.length === 0) {
+                <p class="text-xs text-slate-500">Aún no se han agregado ítems.</p>
+              } @else {
+                <table class="table-base">
+                  <thead>
+                    <tr>
+                      <th>Descripción</th>
+                      <th class="text-center">Cantidad</th>
+                      <th class="text-right">Precio</th>
+                      <th class="text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of order.items; track item.id) {
+                      <tr>
+                        <td>{{ item.description }}</td>
+                        <td class="text-center">{{ item.quantity }}</td>
+                        <td class="text-right">S/ {{ item.unit_price | number: '1.2-2' }}</td>
+                        <td class="text-right font-semibold">
+                          S/ {{ itemTotal(item) | number: '1.2-2' }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+
+              <!-- Formulario de nuevo item -->
+              @if (order.status === 'open') {
+                <form [formGroup]="itemForm" (ngSubmit)="addItem(order)" class="mt-4 grid grid-cols-1 gap-3 md:grid-cols-12">
+                  <div class="md:col-span-6">
+                    <input
+                      type="text"
+                      formControlName="description"
+                      class="form-input"
+                      placeholder="Descripción del repuesto o servicio"
+                    />
+                  </div>
+                  <div class="md:col-span-2">
+                    <input
+                      type="number"
+                      formControlName="quantity"
+                      class="form-input"
+                      min="1"
+                      placeholder="Cantidad"
+                    />
+                  </div>
+                  <div class="md:col-span-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      formControlName="unit_price"
+                      class="form-input"
+                      min="0"
+                      placeholder="Precio unitario"
+                    />
+                  </div>
+                  <div class="md:col-span-2">
+                    <button type="submit" class="btn-primary w-full" [disabled]="addingItem()">
+                      <lucide-icon [img]="plusIcon" [size]="16"></lucide-icon>
+                      Agregar
+                    </button>
+                  </div>
+                </form>
+              }
+            </div>
+
+            <!-- Cerrar orden -->
+            @if (order.status === 'open') {
+              <div class="flex items-center justify-between rounded-xl bg-mint-50 px-4 py-3">
+                <div class="text-sm text-slate-600">
+                  <strong>RN-13:</strong> Para cerrar la orden debe haber diagnóstico y al menos un ítem.
+                </div>
+                <button (click)="closeOrder(order)" class="btn-primary" [disabled]="closingOrder()">
+                  <lucide-icon [img]="checkIcon" [size]="16"></lucide-icon>
+                  {{ closingOrder() ? 'Cerrando...' : 'Cerrar orden' }}
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    } @empty {
+      <div class="card py-12 text-center">
+        <p class="text-sm text-slate-500">No hay órdenes de trabajo registradas todavía.</p>
+        <p class="mt-2 text-xs text-slate-400">
+          Las órdenes se crean automáticamente al iniciar la atención de una cita confirmada.
+        </p>
+      </div>
+    }
+  </div>
+</div>

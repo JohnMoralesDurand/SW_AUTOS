@@ -1,0 +1,171 @@
+<!-- =============================================================================
+     Plantilla de la pagina "Reportes"
+     -----------------------------------------------------------------------------
+     Estructura:
+       1. Encabezado + filtros de rango de fechas (RF-31, RF-32, RF-33)
+       2. Tarjetas resumen del periodo (citas totales + ingresos)
+       3. Graficos: citas por dia + servicios mas solicitados
+       4. Tabla de detalle del top de servicios
+============================================================================= -->
+<div class="space-y-6">
+
+  <!-- ====================== 1. Encabezado y filtros ====================== -->
+  <div class="card">
+    <div class="mb-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="rounded-xl bg-mint-100 p-3 text-mint-700">
+          <lucide-icon [img]="barIcon" [size]="22"></lucide-icon>
+        </div>
+        <div>
+          <h2 class="text-2xl font-bold text-slate-800">Reportes y estadisticas</h2>
+          <p class="text-sm text-slate-500">
+            Indicadores clave del taller en el rango seleccionado.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros de rango de fechas -->
+    <form [formGroup]="form" (ngSubmit)="onApplyFilters()" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div>
+        <label class="form-label">
+          <lucide-icon [img]="calendarIcon" [size]="14" class="inline -mt-1 mr-1"></lucide-icon>
+          Desde
+        </label>
+        <input type="date" formControlName="start" class="form-input" />
+      </div>
+      <div>
+        <label class="form-label">
+          <lucide-icon [img]="calendarIcon" [size]="14" class="inline -mt-1 mr-1"></lucide-icon>
+          Hasta
+        </label>
+        <input type="date" formControlName="end" class="form-input" />
+      </div>
+      <div class="md:col-span-2 flex items-end">
+        <button type="submit" class="btn-primary w-full md:w-auto" [disabled]="loading()">
+          <lucide-icon [img]="refreshIcon" [size]="16"></lucide-icon>
+          {{ loading() ? 'Cargando...' : 'Aplicar filtros' }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ====================== 2. Tarjetas resumen ====================== -->
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+
+    <!-- Tarjeta: Total de citas en el periodo -->
+    <div class="card flex items-center gap-4 hover:shadow-md transition">
+      <div class="rounded-xl bg-mint-100 p-3 text-mint-700">
+        <lucide-icon [img]="trendingIcon" [size]="22"></lucide-icon>
+      </div>
+      <div>
+        <p class="text-xs uppercase text-slate-500">Citas en el periodo</p>
+        <p class="text-3xl font-bold text-slate-800">{{ totalAppointments() }}</p>
+      </div>
+    </div>
+
+    <!-- Tarjeta: Ingresos del periodo (RF-33) -->
+    <div class="card flex items-center gap-4 hover:shadow-md transition">
+      <div class="rounded-xl bg-amber-100 p-3 text-amber-700">
+        <lucide-icon [img]="dollarIcon" [size]="22"></lucide-icon>
+      </div>
+      <div>
+        <p class="text-xs uppercase text-slate-500">Ingresos generados</p>
+        <p class="text-3xl font-bold text-slate-800">
+          S/ {{ income()?.total_income | number: '1.2-2' }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================== 3. Graficos ====================== -->
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+
+    <!-- Grafico de barras: citas por dia (RF-31) -->
+    <div class="card lg:col-span-2">
+      <div class="mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="rounded-lg bg-mint-100 p-2 text-mint-700">
+            <lucide-icon [img]="barIcon" [size]="18"></lucide-icon>
+          </div>
+          <h3 class="text-base font-semibold text-slate-800">Citas por dia</h3>
+        </div>
+        <span class="text-xs text-slate-500">RF-31</span>
+      </div>
+      @if (appointmentsByDay().length === 0) {
+        <p class="py-12 text-center text-sm text-slate-500">
+          No hay citas registradas en este periodo.
+        </p>
+      } @else {
+        <div class="h-72">
+          <canvas baseChart
+            [data]="appointmentsChart()"
+            [options]="barOptions"
+            type="bar">
+          </canvas>
+        </div>
+      }
+    </div>
+
+    <!-- Grafico de pastel: top servicios (RF-32) -->
+    <div class="card">
+      <div class="mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="rounded-lg bg-mint-100 p-2 text-mint-700">
+            <lucide-icon [img]="pieIcon" [size]="18"></lucide-icon>
+          </div>
+          <h3 class="text-base font-semibold text-slate-800">Distribucion de servicios</h3>
+        </div>
+        <span class="text-xs text-slate-500">RF-32</span>
+      </div>
+      @if (topServices().length === 0) {
+        <p class="py-12 text-center text-sm text-slate-500">
+          Sin datos de servicios.
+        </p>
+      } @else {
+        <div class="h-72">
+          <canvas baseChart
+            [data]="topServicesChart()"
+            [options]="pieOptions"
+            type="pie">
+          </canvas>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ====================== 4. Tabla detallada del top de servicios ====================== -->
+  <div class="card">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-slate-800">Ranking de servicios mas solicitados</h3>
+      <span class="text-xs text-slate-500">Top 6</span>
+    </div>
+
+    @if (topServices().length === 0) {
+      <p class="py-12 text-center text-sm text-slate-500">Aun no hay datos para mostrar.</p>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="table-base">
+          <thead>
+            <tr>
+              <th class="w-12">#</th>
+              <th>Servicio</th>
+              <th class="text-right">Solicitudes</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of topServices(); track item.service; let i = $index) {
+              <tr>
+                <td>
+                  <span class="badge {{ i === 0 ? 'badge-success' : 'badge-muted' }}">{{ i + 1 }}</span>
+                </td>
+                <td class="font-medium text-slate-800">{{ item.service }}</td>
+                <td class="text-right font-semibold text-mint-700">{{ item.total }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

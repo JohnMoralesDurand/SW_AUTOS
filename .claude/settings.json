@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Set-Location \"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\"; $env:PYTHONUTF8=\"1\"; & \"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\\\\RICARDO\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" _generar_staruml.py)",
+      "PowerShell(Start-Process -FilePath \"C:\\\\Program Files\\\\StarUML\\\\StarUML.exe\" -ArgumentList \"`\"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\\\\AutoServ_Class_Diagram.mdj`\"\")",
+      "PowerShell(Get-Process -Name \"StarUML\" -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force)",
+      "PowerShell(Set-Location \"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\"; $env:PYTHONUTF8=\"1\"; & \"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\\\\RICARDO\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" _generar_staruml.py; Remove-Item _generar_staruml.py)",
+      "Read(//c/Program Files/StarUML/**)",
+      "PowerShell(Get-Process -Name \"StarUML\" -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 1; Set-Location \"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\"; $env:PYTHONUTF8=\"1\"; & \"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\\\\RICARDO\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" _generar_staruml.py; Remove-Item _generar_staruml.py)",
+      "PowerShell(Get-Process -Name \"StarUML\" -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 1; Set-Location \"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\"; $env:PYTHONUTF8=\"1\"; & \"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\\\\RICARDO\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" _generar_staruml.py; Remove-Item _generar_staruml.py; Start-Process -FilePath \"C:\\\\Program Files\\\\StarUML\\\\StarUML.exe\" -ArgumentList \"`\"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\\\\AutoServ_Class_Diagram.mdj`\"\"; Write-Output \"StarUML lanzado\")",
+      "PowerShell(Get-Process -Name \"StarUML\" -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 1; Set-Location \"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\"; $env:PYTHONUTF8=\"1\"; & \"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\\\\RICARDO\\\\backend\\\\venv\\\\Scripts\\\\python.exe\" _generar_staruml.py; Remove-Item _generar_staruml.py; Start-Process -FilePath \"C:\\\\Program Files\\\\StarUML\\\\StarUML.exe\" -ArgumentList \"`\"c:\\\\Users\\\\moral\\\\Desktop\\\\RICARDO_mejorado\\\\AutoServ_Class_Diagram.mdj`\"\")",
+      "PowerShell($be = Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue; $fe = Get-NetTCPConnection -LocalPort 4200 -State Listen -ErrorAction SilentlyContinue; Write-Output \"Backend \\(8000\\): $\\(if \\($be\\) { 'corriendo PID ' + $be.OwningProcess } else { 'DETENIDO' }\\)\"; Write-Output \"Frontend \\(4200\\): $\\(if \\($fe\\) { 'corriendo PID ' + $fe.OwningProcess } else { 'DETENIDO' }\\)\")"
+    ]
+  }
+}

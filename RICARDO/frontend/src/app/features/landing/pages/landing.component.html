@@ -1,0 +1,296 @@
+<!-- Plantilla de la pagina de bienvenida del taller -->
+<div class="min-h-screen bg-mint-50">
+  <!-- Barra de navegacion superior -->
+  <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-mint-100">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-mint-500 text-white shadow-soft">
+          <lucide-icon [img]="wrenchIcon" [size]="22"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-lg font-bold text-mint-800 leading-tight">AutoServ</p>
+          <p class="text-xs text-slate-500">Taller mecánico</p>
+        </div>
+      </div>
+
+      <nav class="hidden items-center gap-6 md:flex">
+        <a href="#servicios" class="text-sm font-medium text-slate-600 hover:text-mint-700">Servicios</a>
+        <a href="#nosotros" class="text-sm font-medium text-slate-600 hover:text-mint-700">Nosotros</a>
+        <a href="#proceso" class="text-sm font-medium text-slate-600 hover:text-mint-700">Cómo reservar</a>
+        <a href="#contacto" class="text-sm font-medium text-slate-600 hover:text-mint-700">Contacto</a>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <a routerLink="/login" class="btn-outline text-sm">Iniciar sesión</a>
+        <a routerLink="/register" class="btn-primary text-sm">Registrarse</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero principal -->
+  <section class="relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-br from-mint-100 via-mint-50 to-sage-100"></div>
+    <div class="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-mint-200 blur-3xl opacity-60"></div>
+    <div class="absolute bottom-0 -left-20 h-64 w-64 rounded-full bg-sage-200 blur-3xl opacity-50"></div>
+
+    <div class="relative mx-auto grid max-w-6xl items-center gap-10 px-4 py-20 md:grid-cols-2 md:py-28">
+      <div>
+        <span class="inline-flex items-center gap-2 rounded-full bg-mint-200/60 px-4 py-1 text-xs font-semibold text-mint-800">
+          <lucide-icon [img]="sparklesIcon" [size]="14"></lucide-icon>
+          Sistema moderno de gestión
+        </span>
+        <h1 class="mt-4 text-4xl font-bold leading-tight text-slate-800 md:text-5xl">
+          Tu taller de confianza,
+          <span class="text-mint-600">ahora en línea</span>
+        </h1>
+        <p class="mt-4 text-base text-slate-600 md:text-lg">
+          En AutoServ cuidamos tu vehículo con la mejor tecnología y atención personalizada.
+          Reserva tus citas, lleva el historial de servicios y olvídate de las largas esperas.
+        </p>
+
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a routerLink="/register" class="btn-primary">
+            Reservar mi primera cita
+            <lucide-icon [img]="arrowIcon" [size]="18"></lucide-icon>
+          </a>
+          <a href="#servicios" class="btn-outline">Ver servicios</a>
+        </div>
+
+        <div class="mt-10 grid grid-cols-3 gap-4 border-t border-mint-200 pt-6">
+          <div>
+            <p class="text-2xl font-bold text-mint-700">+10</p>
+            <p class="text-xs text-slate-500">Años de experiencia</p>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-mint-700">100%</p>
+            <p class="text-xs text-slate-500">Garantía</p>
+          </div>
+          <div>
+            <p class="text-2xl font-bold text-mint-700">24/7</p>
+            <p class="text-xs text-slate-500">Reservas online</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta visual del lado derecho -->
+      <div class="relative">
+        <div class="absolute -inset-4 rounded-3xl bg-mint-300/30 blur-2xl"></div>
+        <div class="relative card flex flex-col items-center text-center">
+          <div class="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-mint-500 text-white shadow-soft">
+            <lucide-icon [img]="carIcon" [size]="42"></lucide-icon>
+          </div>
+          <h3 class="text-xl font-bold text-slate-800">Tu vehículo merece lo mejor</h3>
+          <p class="mt-2 text-sm text-slate-500">
+            Diagnóstico, mantenimiento y reparación con atención profesional.
+          </p>
+
+          <div class="mt-6 grid w-full grid-cols-2 gap-3">
+            <div class="rounded-xl bg-mint-50 p-4 text-left">
+              <lucide-icon [img]="calendarIcon" [size]="20" class="text-mint-600"></lucide-icon>
+              <p class="mt-2 text-sm font-semibold text-slate-800">Cita rápida</p>
+              <p class="text-xs text-slate-500">En menos de 2 minutos</p>
+            </div>
+            <div class="rounded-xl bg-sage-50 p-4 text-left">
+              <lucide-icon [img]="shieldIcon" [size]="20" class="text-sage-600"></lucide-icon>
+              <p class="mt-2 text-sm font-semibold text-slate-800">Servicio seguro</p>
+              <p class="text-xs text-slate-500">Garantía incluida</p>
+            </div>
+            <div class="rounded-xl bg-sage-50 p-4 text-left">
+              <lucide-icon [img]="gaugeIcon" [size]="20" class="text-sage-600"></lucide-icon>
+              <p class="mt-2 text-sm font-semibold text-slate-800">Historial digital</p>
+              <p class="text-xs text-slate-500">Siempre disponible</p>
+            </div>
+            <div class="rounded-xl bg-mint-50 p-4 text-left">
+              <lucide-icon [img]="clockIcon" [size]="20" class="text-mint-600"></lucide-icon>
+              <p class="mt-2 text-sm font-semibold text-slate-800">Sin esperas</p>
+              <p class="text-xs text-slate-500">Horarios reservados</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Seccion de caracteristicas -->
+  <section id="nosotros" class="py-20">
+    <div class="mx-auto max-w-6xl px-4">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-bold text-slate-800 md:text-4xl">¿Por qué elegirnos?</h2>
+        <p class="mt-3 text-slate-600">
+          Combinamos la experiencia de mecánicos profesionales con tecnología moderna para ofrecerte un servicio confiable y transparente.
+        </p>
+      </div>
+
+      <div class="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        @for (feature of features; track feature.title) {
+          <div class="card transition hover:-translate-y-1 hover:shadow-lg">
+            <div class="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-mint-100 text-mint-700">
+              <lucide-icon [img]="feature.icon" [size]="22"></lucide-icon>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800">{{ feature.title }}</h3>
+            <p class="mt-2 text-sm text-slate-600">{{ feature.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Catalogo de servicios -->
+  <section id="servicios" class="bg-white py-20">
+    <div class="mx-auto max-w-6xl px-4">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-bold text-slate-800 md:text-4xl">Nuestros servicios</h2>
+        <p class="mt-3 text-slate-600">
+          Trabajamos con los mejores estándares para mantener tu vehículo en óptimas condiciones.
+        </p>
+      </div>
+
+      @if (featuredServices().length > 0) {
+        <div class="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          @for (service of featuredServices(); track service.id) {
+            <div class="card transition hover:-translate-y-1 hover:shadow-lg">
+              <div class="mb-3 flex items-center justify-between">
+                <div class="rounded-xl bg-mint-100 p-2 text-mint-700">
+                  <lucide-icon [img]="settingsIcon" [size]="22"></lucide-icon>
+                </div>
+                <span class="badge badge-success">{{ service.category || 'General' }}</span>
+              </div>
+              <h3 class="text-lg font-semibold text-slate-800">{{ service.name }}</h3>
+              <p class="mt-2 text-sm text-slate-600 line-clamp-2">
+                {{ service.description || 'Servicio profesional para tu vehículo.' }}
+              </p>
+              <div class="mt-4 flex items-center justify-between border-t border-mint-100 pt-4">
+                <span class="text-xs text-slate-500">{{ service.duration_minutes }} minutos</span>
+                <span class="text-lg font-bold text-mint-700">S/ {{ service.price | number: '1.2-2' }}</span>
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <div class="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div class="card text-center">
+            <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-mint-100 text-mint-700">
+              <lucide-icon [img]="settingsIcon" [size]="22"></lucide-icon>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800">Cambio de aceite</h3>
+            <p class="mt-2 text-sm text-slate-600">Servicio rápido con aceite y filtro de calidad.</p>
+          </div>
+          <div class="card text-center">
+            <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-mint-100 text-mint-700">
+              <lucide-icon [img]="gaugeIcon" [size]="22"></lucide-icon>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800">Alineamiento y balanceo</h3>
+            <p class="mt-2 text-sm text-slate-600">Mejora la estabilidad y prolonga la vida de tus llantas.</p>
+          </div>
+          <div class="card text-center">
+            <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-mint-100 text-mint-700">
+              <lucide-icon [img]="shieldIcon" [size]="22"></lucide-icon>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-800">Revisión de frenos</h3>
+            <p class="mt-2 text-sm text-slate-600">Diagnóstico completo del sistema de frenos.</p>
+          </div>
+        </div>
+      }
+
+      <div class="mt-10 text-center">
+        <a routerLink="/register" class="btn-primary">
+          Reservar un servicio
+          <lucide-icon [img]="arrowIcon" [size]="18"></lucide-icon>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Como reservar -->
+  <section id="proceso" class="py-20">
+    <div class="mx-auto max-w-6xl px-4">
+      <div class="mx-auto max-w-2xl text-center">
+        <h2 class="text-3xl font-bold text-slate-800 md:text-4xl">Cómo reservar tu cita</h2>
+        <p class="mt-3 text-slate-600">Cuatro pasos sencillos y tu vehículo estará en buenas manos.</p>
+      </div>
+
+      <div class="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        @for (step of steps; track step.number) {
+          <div class="relative card">
+            <span class="absolute -top-4 left-6 rounded-xl bg-mint-500 px-3 py-1 text-sm font-bold text-white shadow-soft">
+              {{ step.number }}
+            </span>
+            <h3 class="mt-3 text-lg font-semibold text-slate-800">{{ step.title }}</h3>
+            <p class="mt-2 text-sm text-slate-600">{{ step.description }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- Llamada a la acción final -->
+  <section class="py-16">
+    <div class="mx-auto max-w-5xl px-4">
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-mint-500 to-sage-500 p-10 text-center text-white shadow-soft md:p-14">
+        <div class="absolute -top-10 right-10 h-32 w-32 rounded-full bg-white/10 blur-2xl"></div>
+        <div class="absolute bottom-0 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl"></div>
+        <h2 class="text-3xl font-bold md:text-4xl">¿Listo para cuidar tu vehículo?</h2>
+        <p class="mt-3 text-mint-50">
+          Crea tu cuenta gratuita y agenda tu primera cita en minutos.
+        </p>
+        <div class="mt-6 flex flex-wrap justify-center gap-3">
+          <a routerLink="/register" class="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-mint-700 shadow-soft transition hover:bg-mint-50">
+            Crear cuenta
+            <lucide-icon [img]="arrowIcon" [size]="18"></lucide-icon>
+          </a>
+          <a routerLink="/login" class="inline-flex items-center justify-center gap-2 rounded-xl border border-white/40 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+            Ya tengo cuenta
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pie de página -->
+  <footer id="contacto" class="border-t border-mint-100 bg-white py-10">
+    <div class="mx-auto grid max-w-6xl gap-8 px-4 md:grid-cols-3">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-mint-500 text-white">
+            <lucide-icon [img]="wrenchIcon" [size]="20"></lucide-icon>
+          </div>
+          <p class="text-lg font-bold text-mint-800">AutoServ</p>
+        </div>
+        <p class="mt-3 text-sm text-slate-600">
+          Sistema de gestión de taller mecánico. Tu vehículo, en las mejores manos.
+        </p>
+      </div>
+
+      <div>
+        <h4 class="text-sm font-semibold text-slate-800">Contacto</h4>
+        <ul class="mt-3 space-y-2 text-sm text-slate-600">
+          <li class="flex items-center gap-2">
+            <lucide-icon [img]="phoneIcon" [size]="16" class="text-mint-600"></lucide-icon>
+            +51 999 000 001
+          </li>
+          <li class="flex items-center gap-2">
+            <lucide-icon [img]="mailIcon" [size]="16" class="text-mint-600"></lucide-icon>
+            contacto&#64;autoserv.com
+          </li>
+          <li class="flex items-center gap-2">
+            <lucide-icon [img]="mapIcon" [size]="16" class="text-mint-600"></lucide-icon>
+            Av. Principal 123, Lima
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="text-sm font-semibold text-slate-800">Horario de atención</h4>
+        <ul class="mt-3 space-y-1 text-sm text-slate-600">
+          <li>Lunes a viernes: 08:00 - 18:00</li>
+          <li>Sábados: 08:00 - 13:00</li>
+          <li>Domingos: cerrado</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mx-auto mt-8 max-w-6xl border-t border-mint-100 px-4 pt-6 text-center text-xs text-slate-500">
+      &copy; {{ 2026 }} AutoServ. Proyecto académico.
+    </div>
+  </footer>
+</div>

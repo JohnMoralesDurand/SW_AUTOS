@@ -1,0 +1,70 @@
+<!-- Plantilla del componente de registro de cliente -->
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-mint-100 via-mint-50 to-sage-100 px-4 py-10">
+  <div class="w-full max-w-lg">
+    <a routerLink="/" class="mb-4 inline-flex items-center gap-1 text-sm font-medium text-mint-700 hover:text-mint-800">
+      <lucide-icon [img]="arrowLeftIcon" [size]="16"></lucide-icon>
+      Volver al inicio
+    </a>
+
+    <div class="card">
+      <h2 class="mb-1 text-2xl font-semibold text-slate-800">Crear cuenta</h2>
+      <p class="mb-6 text-sm text-slate-500">Complete sus datos para registrarse como cliente.</p>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div>
+          <label class="form-label">Nombres</label>
+          <input type="text" formControlName="first_name" class="form-input" />
+        </div>
+
+        <div>
+          <label class="form-label">Apellidos</label>
+          <input type="text" formControlName="last_name" class="form-input" />
+        </div>
+
+        <div>
+          <label class="form-label">DNI</label>
+          <input type="text" formControlName="dni" maxlength="8" class="form-input" />
+          @if (form.controls.dni.touched && form.controls.dni.invalid) {
+            <p class="mt-1 text-xs text-red-600">El DNI debe tener 8 dígitos.</p>
+          }
+        </div>
+
+        <div>
+          <label class="form-label">Teléfono</label>
+          <input type="text" formControlName="phone" class="form-input" placeholder="999999999" />
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="form-label">Correo electrónico</label>
+          <input type="email" formControlName="email" class="form-input" placeholder="ejemplo@correo.com" />
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="form-label">Contraseña</label>
+          <input type="password" formControlName="password" class="form-input" />
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <p class="mt-1 text-xs text-red-600">La contraseña debe tener al menos 6 caracteres.</p>
+          }
+        </div>
+
+        @if (errorMessage()) {
+          <div class="md:col-span-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {{ errorMessage() }}
+          </div>
+        }
+        @if (successMessage()) {
+          <div class="md:col-span-2 rounded-xl border border-mint-200 bg-mint-50 px-4 py-2 text-sm text-mint-700">
+            {{ successMessage() }}
+          </div>
+        }
+
+        <div class="md:col-span-2">
+          <button type="submit" class="btn-primary w-full" [disabled]="form.invalid || loading()">
+            <lucide-icon [img]="userPlusIcon" [size]="18"></lucide-icon>
+            {{ loading() ? 'Creando cuenta...' : 'Registrarse' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

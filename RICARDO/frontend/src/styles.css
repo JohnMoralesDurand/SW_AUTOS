@@ -1,0 +1,98 @@
+/* Estilos globales del sistema AutoServ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    height: 100%;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Boton primario verde pastel */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-mint-500 px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-mint-600 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  /* Boton secundario contornado */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-mint-300 bg-white px-5 py-2.5 text-sm font-semibold text-mint-700 transition hover:bg-mint-50;
+  }
+
+  /* Boton de peligro */
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-red-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600;
+  }
+
+  /* Tarjeta blanca con sombra suave */
+  .card {
+    @apply rounded-2xl bg-white p-6 shadow-soft border border-mint-100;
+  }
+
+  /* Input estandar del formulario */
+  .form-input {
+    @apply w-full rounded-xl border border-mint-200 bg-white px-4 py-2.5 text-sm text-slate-800 outline-none transition focus:border-mint-400 focus:ring-2 focus:ring-mint-200;
+  }
+
+  /* Etiqueta de formulario */
+  .form-label {
+    @apply mb-1 block text-sm font-medium text-slate-700;
+  }
+
+  /* Tabla del sistema */
+  .table-base {
+    @apply w-full overflow-hidden rounded-xl text-sm;
+  }
+  .table-base thead {
+    @apply bg-mint-100 text-left text-mint-800;
+  }
+  .table-base th {
+    @apply px-4 py-3 font-semibold;
+  }
+  .table-base td {
+    @apply border-t border-mint-50 px-4 py-3 text-slate-700;
+  }
+
+  /* Badges de estado */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .badge-success { @apply bg-mint-100 text-mint-700; }
+  .badge-warning { @apply bg-amber-100 text-amber-700; }
+  .badge-danger  { @apply bg-red-100 text-red-700; }
+  .badge-info    { @apply bg-sky-100 text-sky-700; }
+  .badge-muted   { @apply bg-slate-100 text-slate-700; }
+
+  /* ---------------------------------------------------------------------
+     Botones de filtro (chips). Cada filtro tiene tres estados:
+       - reposo:    fondo blanco, borde mint suave, texto gris
+       - hover:     fondo del color del filtro suave
+       - activo:    fondo del color del filtro fuerte, texto blanco
+     Uso:  <button class="chip chip-success" [class.is-active]="...">
+     -------------------------------------------------------------------- */
+  .chip {
+    @apply rounded-full border bg-white px-4 py-1.5 text-sm font-medium text-slate-700
+           border-slate-200 shadow-sm transition;
+  }
+  .chip:hover { @apply bg-slate-50; }
+
+  .chip-neutral.is-active { @apply bg-slate-700 text-white border-slate-700; }
+  .chip-neutral:hover { @apply bg-slate-100 border-slate-300; }
+
+  .chip-warning.is-active { @apply bg-amber-500 text-white border-amber-500; }
+  .chip-warning:hover { @apply bg-amber-50 border-amber-200; }
+
+  .chip-info.is-active { @apply bg-sky-500 text-white border-sky-500; }
+  .chip-info:hover { @apply bg-sky-50 border-sky-200; }
+
+  .chip-progress.is-active { @apply bg-violet-500 text-white border-violet-500; }
+  .chip-progress:hover { @apply bg-violet-50 border-violet-200; }
+
+  .chip-success.is-active { @apply bg-mint-500 text-white border-mint-500; }
+  .chip-success:hover { @apply bg-mint-50 border-mint-200; }
+
+  .chip-danger.is-active { @apply bg-red-500 text-white border-red-500; }
+  .chip-danger:hover { @apply bg-red-50 border-red-200; }
+}

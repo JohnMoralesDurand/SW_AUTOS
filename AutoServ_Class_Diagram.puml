@@ -1,0 +1,166 @@
+@startuml AutoServ_Diagrama_de_Clases
+' ===========================================================================
+'  AutoServ - Diagrama de clases del dominio
+' ===========================================================================
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam roundcorner 6
+skinparam ArrowColor #3FA06F
+skinparam ArrowFontSize 10
+skinparam BackgroundColor white
+skinparam DefaultFontName "Segoe UI"
+skinparam DefaultFontSize 11
+skinparam ranksep 40
+skinparam nodesep 30
+
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #3FA06F
+    HeaderBackgroundColor #E8F5EE
+    AttributeFontSize 10
+    FontStyle bold
+}
+
+skinparam enum {
+    BackgroundColor #FFF7ED
+    BorderColor #F59E0B
+    HeaderBackgroundColor #FEF3C7
+    FontStyle bold
+    AttributeFontSize 10
+}
+
+title <b>AutoServ - Diagrama de clases</b>
+
+' ===========================================================================
+'  ENUMERACIONES
+' ===========================================================================
+enum UserRole {
+    CLIENT
+    MECHANIC
+    ADMIN
+}
+
+enum AppointmentStatus {
+    PENDING
+    CONFIRMED
+    IN_PROGRESS
+    COMPLETED
+    CANCELLED
+}
+
+enum WorkOrderStatus {
+    OPEN
+    CLOSED
+}
+
+enum NotificationType {
+    APPOINTMENT_BOOKED
+    APPOINTMENT_REMINDER
+    STATUS_CHANGED
+    SERVICE_COMPLETED
+}
+
+' ===========================================================================
+'  ENTIDADES
+' ===========================================================================
+class User {
+    +id : int
+    +first_name : str
+    +last_name : str
+    +dni : str
+    +email : str
+    +phone : str
+    +role : UserRole
+    +specialty : str
+    +work_schedule : str
+}
+
+class Vehicle {
+    +id : int
+    +owner_id : int
+    +license_plate : str
+    +brand : str
+    +model : str
+    +year : int
+    +mileage : int
+    +color : str
+}
+
+class Service {
+    +id : int
+    +name : str
+    +description : str
+    +category : str
+    +duration_minutes : int
+    +price : float
+}
+
+class Appointment {
+    +id : int
+    +client_id : int
+    +vehicle_id : int
+    +service_id : int
+    +mechanic_id : int
+    +scheduled_at : datetime
+    +duration_minutes : int
+    +frozen_price : float
+    +status : AppointmentStatus
+}
+
+class WorkOrder {
+    +id : int
+    +appointment_id : int
+    +diagnosis : str
+    +total_amount : float
+    +status : WorkOrderStatus
+    +closed_at : datetime
+}
+
+class WorkOrderItem {
+    +id : int
+    +work_order_id : int
+    +description : str
+    +quantity : int
+    +unit_price : float
+}
+
+class Notification {
+    +id : int
+    +user_id : int
+    +type : NotificationType
+    +title : str
+    +message : str
+    +is_read : bool
+}
+
+class BusinessHours {
+    +id : int
+    +day_of_week : int
+    +is_open : bool
+    +open_time : str
+    +close_time : str
+}
+
+' ===========================================================================
+'  RELACIONES
+' ===========================================================================
+
+User "1" --o "0..*" Vehicle : posee
+User "1" --> "0..*" Appointment : reserva
+User "0..1" --> "0..*" Appointment : atiende
+Vehicle "1" --> "0..*" Appointment
+Service "1" --> "0..*" Appointment
+Appointment "1" --> "0..1" WorkOrder : genera
+WorkOrder "1" *-- "0..*" WorkOrderItem
+User "1" --> "0..*" Notification
+
+User ..> UserRole
+Appointment ..> AppointmentStatus
+WorkOrder ..> WorkOrderStatus
+Notification ..> NotificationType
+
+' Dependencia: las citas consultan los horarios del taller para validar la fecha
+Appointment ..> BusinessHours : consulta horario
+
+@enduml
