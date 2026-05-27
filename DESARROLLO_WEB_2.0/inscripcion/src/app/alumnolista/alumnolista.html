@@ -1,0 +1,52 @@
+<div class="contenedor">
+    
+    <div class="cabecera">
+        <h2>Lista de Alumnos</h2>
+        <p-button label="Nuevo Alumno" [raised]="true" severity="info" (click)="crearAlumno()"/>
+
+    </div>
+
+    <div class="tabla">
+
+        <p-table [value]="lista_Alumnos" [tableStyle]="{ 'min-width': '50rem' }">
+            
+            <ng-template #header>
+                <tr>
+                <th>ID</th>
+                <th>AP</th>
+                <th>AM</th>
+                <th>NOMBRE</th>
+                <th>Documento</th>
+                <th>Correo</th>
+                <th>Telefono</th>
+                <th>Fecha Nacimiento</th>
+                <th>Acciones</th>
+                </tr>
+            </ng-template>
+
+            <ng-template #body let-alumno>
+                <tr>
+                <td>{{ alumno.id }}</td>
+                <td>{{ alumno.ap }}</td>    
+                <td>{{ alumno.am }}</td>
+                <td>{{ alumno.nombre }}</td>
+                <td>{{ alumno.tipo_documento.abreviatura }} - {{ alumno.numero_documento }}</td>
+                <td>{{ alumno.correo }}</td>
+                <td>{{ alumno.telefono }}</td>
+                <td>{{ alumno.fechaNacimiento | date:'yyyy-MM-dd' }}</td>
+                    <td>
+                        <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="borrarAlumno(alumno)" />&nbsp;
+                        <p-button icon="pi pi-pencil" severity="info" [rounded]="true" [outlined]="true" (click)="actualizarAlumno(alumno)" />
+                    </td>
+                </tr>
+            </ng-template>
+
+        </p-table>
+
+    </div>
+
+</div>
+
+
+
+

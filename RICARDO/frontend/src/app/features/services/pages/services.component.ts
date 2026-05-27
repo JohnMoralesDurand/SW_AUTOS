@@ -10,7 +10,7 @@
 // =============================================================================
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   LucideAngularModule,
@@ -22,17 +22,24 @@ import {
   Calendar,
   AlertCircle,
   Pencil,
+  Camera,
+  Upload,
+  Trash2,
 } from 'lucide-angular';
 
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
 import { Service } from '../../../core/models/service.model';
 import { AuthService } from '../../../core/services/auth.service';
+import {
+  ServicePhoto,
+  ServicePhotoService,
+} from '../../../core/services/service-photo.service';
 import { extractErrorMessage } from '../../../core/utils/http-error';
 
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, LucideAngularModule],
   templateUrl: './services.component.html',
 })
 export class ServicesComponent implements OnInit {
@@ -45,6 +52,9 @@ export class ServicesComponent implements OnInit {
   readonly calendarIcon = Calendar;
   readonly alertIcon = AlertCircle;
   readonly editIcon = Pencil;
+  readonly cameraIcon = Camera;
+  readonly uploadIcon = Upload;
+  readonly trashIcon = Trash2;
 
   readonly services = signal<Service[]>([]);
   readonly showForm = signal(false);
@@ -53,6 +63,22 @@ export class ServicesComponent implements OnInit {
 
   // Indica el id del servicio que se está editando (null = creando uno nuevo).
   readonly editingId = signal<number | null>(null);
+
+  // -------------------------------------------------------------------------
+  // Estado del modal de Fotos de Servicio (FotosServicio)
+  // -------------------------------------------------------------------------
+  readonly showPhotosModal = signal(false);
+  readonly photosForService = signal<Service | null>(null);
+  readonly photos = signal<ServicePhoto[]>([]);
+  readonly photosLoading = signal(false);
+  readonly photosError = signal<string | null>(null);
+
+  // Formulario de subida (archivo + tipo + descripcion opcional)
+  readonly selectedFile = signal<File | null>(null);
+  readonly selectedPreview = signal<string | null>(null);
+  readonly uploadTipo = signal<'entrada' | 'salida' | 'general'>('entrada');
+  readonly uploadDescripcion = signal<string>('');
+  readonly uploading = signal(false);
 
   // Formulario reutilizable para crear y editar.
   readonly form = this.fb.nonNullable.group({
@@ -68,6 +94,7 @@ export class ServicesComponent implements OnInit {
     private serviceCatalog: ServiceCatalogService,
     private router: Router,
     public authService: AuthService,
+    public photoService: ServicePhotoService,
   ) {}
 
   ngOnInit(): void {
@@ -174,5 +201,148 @@ export class ServicesComponent implements OnInit {
     this.router.navigate(['/app/appointments/new'], {
       queryParams: { service_id: service.id },
     });
+  }
+
+  // ===========================================================================
+  // Gestion de Fotos de Servicio (FotosServicio del diagrama)
+  // ===========================================================================
+
+  /** Abre el modal de fotos para un servicio especifico. */
+  openPhotosModal(service: Service): void {
+    this.photosForService.set(service);
+    this.photos.set([]);
+    this.photosError.set(null);
+    this.selectedFile.set(null);
+    this.selectedPreview.set(null);
+    this.uploadDescripcion.set('');
+    this.uploadTipo.set('entrada');
+    this.showPhotosModal.set(true);
+    this.loadPhotos(service.id);
+  }
+
+  closePhotosModal(): void {
+    this.showPhotosModal.set(false);
+    this.photosForService.set(null);
+    this.photos.set([]);
+    if (this.selectedPreview()) {
+      URL.revokeObjectURL(this.selectedPreview()!);
+    }
+    this.selectedFile.set(null);
+    this.selectedPreview.set(null);
+  }
+
+  /** Carga las fotos del servicio desde el backend. */
+  private loadPhotos(serviceId: number): void {
+    this.photosLoading.set(true);
+    this.photoService.list(serviceId).subscribe({
+      next: (data) => {
+        this.photos.set(data);
+        this.photosLoading.set(false);
+      },
+      error: (err) => {
+        this.photosLoading.set(false);
+        this.photosError.set(
+          extractErrorMessage(err, 'No se pudieron cargar las fotos.'),
+        );
+      },
+    });
+  }
+
+  /** Maneja la seleccion de archivo del input. */
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    if (!file) return;
+
+    // Validacion basica de tipo de archivo
+    if (!file.type.startsWith('image/')) {
+      this.photosError.set('El archivo seleccionado no es una imagen.');
+      return;
+    }
+    // Limpia el preview anterior
+    if (this.selectedPreview()) {
+      URL.revokeObjectURL(this.selectedPreview()!);
+    }
+    this.selectedFile.set(file);
+    this.selectedPreview.set(URL.createObjectURL(file));
+    this.photosError.set(null);
+  }
+
+  /** Sube la foto seleccionada al servicio actual. */
+  uploadPhoto(): void {
+    const service = this.photosForService();
+    const file = this.selectedFile();
+    if (!service || !file) {
+      this.photosError.set('Selecciona una imagen antes de subir.');
+      return;
+    }
+    this.uploading.set(true);
+    this.photosError.set(null);
+
+    this.photoService
+      .upload(service.id, file, this.uploadTipo(), this.uploadDescripcion() || undefined)
+      .subscribe({
+        next: () => {
+          this.uploading.set(false);
+          // Limpia el formulario y recarga la lista
+          if (this.selectedPreview()) {
+            URL.revokeObjectURL(this.selectedPreview()!);
+          }
+          this.selectedFile.set(null);
+          this.selectedPreview.set(null);
+          this.uploadDescripcion.set('');
+          this.loadPhotos(service.id);
+        },
+        error: (err) => {
+          this.uploading.set(false);
+          this.photosError.set(
+            extractErrorMessage(err, 'No se pudo subir la foto.'),
+          );
+        },
+      });
+  }
+
+  /** Elimina una foto (solo staff). */
+  deletePhoto(photo: ServicePhoto): void {
+    if (!confirm('¿Eliminar esta foto?')) return;
+    this.photoService.delete(photo.id).subscribe({
+      next: () => {
+        const service = this.photosForService();
+        if (service) this.loadPhotos(service.id);
+      },
+      error: (err) => {
+        this.photosError.set(
+          extractErrorMessage(err, 'No se pudo eliminar la foto.'),
+        );
+      },
+    });
+  }
+
+  /** Construye la URL absoluta para mostrar la foto en un <img>. */
+  photoUrl(photo: ServicePhoto): string {
+    return this.photoService.absoluteUrl(photo);
+  }
+
+  /** Devuelve la clase de badge segun el tipo de foto. */
+  tipoBadgeClass(tipo: string | null): string {
+    switch ((tipo || '').toLowerCase()) {
+      case 'entrada':
+        return 'badge-info';
+      case 'salida':
+        return 'badge-success';
+      default:
+        return 'badge-muted';
+    }
+  }
+
+  tipoLabel(tipo: string | null): string {
+    switch ((tipo || '').toLowerCase()) {
+      case 'entrada':
+        return 'Entrada';
+      case 'salida':
+        return 'Salida';
+      default:
+        return 'General';
+    }
   }
 }

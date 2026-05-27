@@ -51,9 +51,10 @@
             <span class="text-sm font-semibold text-slate-700">
               S/ {{ order.total_amount | number: '1.2-2' }}
             </span>
-            <span class="badge" [class.badge-info]="order.status === 'open'" [class.badge-success]="order.status === 'closed'">
-              {{ order.status === 'open' ? 'Abierta' : 'Cerrada' }}
-            </span>
+            <!-- Estado: PrimeNG p-tag (siguiendo patron del profesor) -->
+            <p-tag [value]="order.status === 'open' ? 'Abierta' : 'Cerrada'"
+                   [severity]="order.status === 'open' ? 'info' : 'success'">
+            </p-tag>
           </div>
         </div>
 

@@ -1,0 +1,57 @@
+# ============================================================================
+# .gitignore del proyecto AutoServ
+# ============================================================================
+
+# --- Node.js / Angular ---
+node_modules/
+.angular/
+dist/
+*.log
+npm-debug.log*
+.npm/
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+env/
+.venv/
+*.egg-info/
+
+# --- Django ---
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+autoserv.db
+staticfiles/
+media/
+
+# --- Uploads del usuario (regenerables) ---
+RICARDO/backend_django/uploads/
+RICARDO/backend/uploads/
+
+# --- Variables de entorno (informacion sensible) ---
+.env
+.env.local
+.env.*.local
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Carpeta backend antigua (FastAPI - quedo bloqueada en Windows) ---
+RICARDO/backend/
+
+# --- Outputs de testing/cobertura ---
+coverage/
+.pytest_cache/
+.coverage

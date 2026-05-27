@@ -1,4 +1,12 @@
 /* Estilos globales del sistema AutoServ */
+
+/* PrimeNG: tema visual de la libreria (necesario para que los componentes
+   p-table, p-button, p-dialog se rendericen correctamente).
+   Coexiste con Tailwind sin conflictos. */
+@import "primeng/resources/themes/aura-light-green/theme.css";
+@import "primeng/resources/primeng.min.css";
+@import "primeicons/primeicons.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

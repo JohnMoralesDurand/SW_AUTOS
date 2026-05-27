@@ -27,6 +27,11 @@ import {
   Eye,
 } from 'lucide-angular';
 
+// PrimeNG (siguiendo el patron del profesor)
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { Appointment, AppointmentStatus } from '../../../core/models/appointment.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -44,7 +49,11 @@ interface StatusOption {
 @Component({
   selector: 'app-appointments',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, LucideAngularModule],
+  imports: [
+    CommonModule, RouterLink, FormsModule, LucideAngularModule,
+    // Modulos PrimeNG (referencia: profesor en DESARROLLO_WEB_2.0)
+    TableModule, ButtonModule, TagModule,
+  ],
   templateUrl: './appointments.component.html',
 })
 export class AppointmentsComponent implements OnInit {

@@ -1,0 +1,42 @@
+<div class="contenedor">
+    
+    <div class="cabecera">
+        <h2>Tipos de Documento</h2>
+        <p-button label="Nuevo Tipo de Documento" [raised]="true" severity="info" (click)="crearTipo()"/>
+
+    </div>
+
+    <div class="tabla">
+
+        <p-table [value]="lista_tipos" [tableStyle]="{ 'min-width': '50rem' }">
+            
+            <ng-template #header>
+                <tr>
+                <th>ID</th>
+                <th>Tipo</th>
+                <th>Abreviatura</th>
+                <th>Acciones</th>
+                </tr>
+            </ng-template>
+
+            <ng-template #body let-tipo>
+                <tr>
+                 
+                    <td>{{ tipo.id }}</td>
+                    <td>{{ tipo.tipo }}</td>
+                    <td>{{ tipo.abreviatura }}</td>
+                    
+                    <td>
+                    <p-button icon="pi pi-trash" severity="danger" [rounded]="true" [outlined]="true" (click)="borrarTipo(tipo)" />&nbsp;
+                    <p-button icon="pi pi-pencil" severity="info" [rounded]="true" [outlined]="true" (click)="actualizarTipo(tipo)" />
+                   </td>
+
+                </tr>
+            </ng-template>
+
+        </p-table>
+
+    </div>
+
+</div>
+

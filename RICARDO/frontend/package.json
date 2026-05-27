@@ -22,6 +22,8 @@
     "esbuild": "^0.28.0",
     "lucide-angular": "^0.344.0",
     "ng2-charts": "^6.0.1",
+    "primeicons": "^7.0.0",
+    "primeng": "^17.18.15",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zod": "^3.22.4",

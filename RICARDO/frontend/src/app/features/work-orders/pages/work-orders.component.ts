@@ -22,6 +22,10 @@ import {
   AlertCircle,
 } from 'lucide-angular';
 
+// PrimeNG (referencia: profesor en DESARROLLO_WEB_2.0)
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+
 import {
   WorkOrder,
   WorkOrderService,
@@ -31,7 +35,11 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
 @Component({
   selector: 'app-work-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, LucideAngularModule],
+  imports: [
+    CommonModule, FormsModule, ReactiveFormsModule, LucideAngularModule,
+    // Modulos PrimeNG
+    ButtonModule, TagModule,
+  ],
   templateUrl: './work-orders.component.html',
 })
 export class WorkOrdersComponent implements OnInit {

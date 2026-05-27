@@ -18,6 +18,11 @@ import {
   AlertCircle,
 } from 'lucide-angular';
 
+// PrimeNG (aplicado siguiendo el ejemplo del profesor)
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+
 import { UserService } from '../../../core/services/user.service';
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
 import { User, UserRole } from '../../../core/models/user.model';
@@ -26,7 +31,11 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
+  imports: [
+    CommonModule, ReactiveFormsModule, LucideAngularModule,
+    // Modulos PrimeNG (referencia: profesor en DESARROLLO_WEB_2.0)
+    TableModule, ButtonModule, TagModule,
+  ],
   templateUrl: './users.component.html',
 })
 export class UsersComponent implements OnInit {

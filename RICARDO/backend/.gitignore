@@ -1,9 +1,0 @@
-# Archivos a ignorar por git en el backend
-__pycache__/
-*.py[cod]
-*.db
-.env
-venv/
-.venv/
-.pytest_cache/
-*.egg-info/

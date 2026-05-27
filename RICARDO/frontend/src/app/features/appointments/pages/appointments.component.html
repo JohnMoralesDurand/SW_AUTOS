@@ -28,92 +28,99 @@
   </div>
 
   <!-- Listado en tabla -->
+  <!--
+    Listado de citas con PrimeNG <p-table>
+    (siguiendo el patron del ejemplo del profesor en DESARROLLO_WEB_2.0)
+    Se mantienen los botones de accion personalizados de Tailwind para
+    no perder el flujo de RF-19 a RF-24.
+  -->
   <div class="card overflow-x-auto">
-    @if (appointments().length === 0) {
-      <div class="flex flex-col items-center py-16">
-        <div class="rounded-2xl bg-mint-100 p-4 text-mint-600">
-          <lucide-icon [img]="calendarIcon" [size]="32"></lucide-icon>
-        </div>
-        <p class="mt-3 text-base font-semibold text-slate-700">No hay citas registradas</p>
-        <p class="text-sm text-slate-500">Cuando se registren citas aparecerán en esta lista.</p>
-      </div>
-    } @else {
-      <table class="table-base">
-        <thead>
-          <tr>
-            <th>Fecha</th>
-            <th>Servicio</th>
-            <th>Vehículo</th>
-            <th>Cliente</th>
-            <th>Mecánico</th>
-            <th>Precio</th>
-            <th>Estado</th>
-            <th class="text-right">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (appointment of appointments(); track appointment.id) {
-            <tr>
-              <td>{{ appointment.scheduled_at | date: 'short' }}</td>
-              <td>{{ appointment.service_name }}</td>
-              <td class="font-mono text-xs">{{ appointment.vehicle_plate }}</td>
-              <td>{{ appointment.client_name }}</td>
-              <td>{{ appointment.mechanic_name || '—' }}</td>
-              <td>S/ {{ appointment.frozen_price | number: '1.2-2' }}</td>
-              <td>
-                <span class="badge {{ getStatusClass(appointment.status) }}">
-                  {{ getStatusLabel(appointment.status) }}
-                </span>
-              </td>
-              <td class="text-right">
-                <div class="flex justify-end gap-1">
-                  <!-- Confirmar (admin/mecánico, sólo si pendiente) -->
-                  @if (appointment.status === 'pending' && !authService.isClient()) {
-                    <button (click)="onConfirm(appointment)" class="rounded-lg p-1.5 text-mint-600 hover:bg-mint-50" title="Confirmar">
-                      <lucide-icon [img]="confirmIcon" [size]="18"></lucide-icon>
-                    </button>
-                  }
-                  <!-- Asignar mecánico (admin, sólo si confirmada) -->
-                  @if (appointment.status === 'confirmed' && authService.isAdmin()) {
-                    <button (click)="openAssignModal(appointment)" class="rounded-lg p-1.5 text-violet-600 hover:bg-violet-50" title="Asignar mecánico">
-                      <lucide-icon [img]="assignIcon" [size]="18"></lucide-icon>
-                    </button>
-                  }
-                  <!-- Iniciar (admin/mecánico, sólo si confirmada) -->
-                  @if (appointment.status === 'confirmed' && !authService.isClient()) {
-                    <button (click)="onStart(appointment)" class="rounded-lg p-1.5 text-sky-600 hover:bg-sky-50" title="Iniciar atención">
-                      <lucide-icon [img]="startIcon" [size]="18"></lucide-icon>
-                    </button>
-                  }
-                  <!-- Reagendar (cualquiera con cita activa) -->
-                  @if (appointment.status === 'pending' || appointment.status === 'confirmed') {
-                    <button (click)="openRescheduleModal(appointment)" class="rounded-lg p-1.5 text-amber-600 hover:bg-amber-50" title="Reagendar">
-                      <lucide-icon [img]="rescheduleIcon" [size]="18"></lucide-icon>
-                    </button>
-                  }
-                  <!-- Cancelar (cualquiera con cita activa) -->
-                  @if (appointment.status === 'pending' || appointment.status === 'confirmed') {
-                    <button (click)="onCancel(appointment)" class="rounded-lg p-1.5 text-red-600 hover:bg-red-50" title="Cancelar">
-                      <lucide-icon [img]="cancelIcon" [size]="18"></lucide-icon>
-                    </button>
-                  }
-                  <!-- Ver detalle (cita completada: muestra mecánico, diagnóstico y trabajos) -->
-                  @if (appointment.status === 'completed') {
-                    <button (click)="openDetailModal(appointment)" class="rounded-lg p-1.5 text-mint-600 hover:bg-mint-50" title="Ver detalle">
-                      <lucide-icon [img]="viewIcon" [size]="18"></lucide-icon>
-                    </button>
-                  }
-                  <!-- Marcador cuando no hay acciones disponibles -->
-                  @if (!hasActions(appointment)) {
-                    <span class="text-slate-400">—</span>
-                  }
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    }
+    <p-table [value]="appointments()" [rows]="10" [paginator]="appointments().length > 10"
+             styleClass="p-datatable-sm" responsiveLayout="scroll"
+             [tableStyle]="{ 'min-width': '60rem' }">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Fecha</th>
+          <th>Servicio</th>
+          <th>Vehiculo</th>
+          <th>Cliente</th>
+          <th>Mecanico</th>
+          <th>Precio</th>
+          <th>Estado</th>
+          <th class="text-right">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-appointment>
+        <tr>
+          <td>{{ appointment.scheduled_at | date: 'short' }}</td>
+          <td>{{ appointment.service_name }}</td>
+          <td class="font-mono text-xs">{{ appointment.vehicle_plate }}</td>
+          <td>{{ appointment.client_name }}</td>
+          <td>{{ appointment.mechanic_name || '—' }}</td>
+          <td>S/ {{ appointment.frozen_price | number: '1.2-2' }}</td>
+          <td>
+            <p-tag [value]="getStatusLabel(appointment.status)"
+                   [severity]="appointment.status === 'completed' ? 'success'
+                              : appointment.status === 'cancelled' ? 'danger'
+                              : appointment.status === 'in_progress' ? 'info'
+                              : appointment.status === 'confirmed' ? 'info'
+                              : 'warning'">
+            </p-tag>
+          </td>
+          <td class="text-right">
+            <div class="flex justify-end gap-1">
+              @if (appointment.status === 'pending' && !authService.isClient()) {
+                <button (click)="onConfirm(appointment)" class="rounded-lg p-1.5 text-mint-600 hover:bg-mint-50" title="Confirmar">
+                  <lucide-icon [img]="confirmIcon" [size]="18"></lucide-icon>
+                </button>
+              }
+              @if (appointment.status === 'confirmed' && authService.isAdmin()) {
+                <button (click)="openAssignModal(appointment)" class="rounded-lg p-1.5 text-violet-600 hover:bg-violet-50" title="Asignar mecánico">
+                  <lucide-icon [img]="assignIcon" [size]="18"></lucide-icon>
+                </button>
+              }
+              @if (appointment.status === 'confirmed' && !authService.isClient()) {
+                <button (click)="onStart(appointment)" class="rounded-lg p-1.5 text-sky-600 hover:bg-sky-50" title="Iniciar atención">
+                  <lucide-icon [img]="startIcon" [size]="18"></lucide-icon>
+                </button>
+              }
+              @if (appointment.status === 'pending' || appointment.status === 'confirmed') {
+                <button (click)="openRescheduleModal(appointment)" class="rounded-lg p-1.5 text-amber-600 hover:bg-amber-50" title="Reagendar">
+                  <lucide-icon [img]="rescheduleIcon" [size]="18"></lucide-icon>
+                </button>
+                <button (click)="onCancel(appointment)" class="rounded-lg p-1.5 text-red-600 hover:bg-red-50" title="Cancelar">
+                  <lucide-icon [img]="cancelIcon" [size]="18"></lucide-icon>
+                </button>
+              }
+              @if (appointment.status === 'completed') {
+                <button (click)="openDetailModal(appointment)" class="rounded-lg p-1.5 text-mint-600 hover:bg-mint-50" title="Ver detalle">
+                  <lucide-icon [img]="viewIcon" [size]="18"></lucide-icon>
+                </button>
+              }
+              @if (!hasActions(appointment)) {
+                <span class="text-slate-400">—</span>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="flex flex-col items-center py-16">
+              <div class="rounded-2xl bg-mint-100 p-4 text-mint-600">
+                <lucide-icon [img]="calendarIcon" [size]="32"></lucide-icon>
+              </div>
+              <p class="mt-3 text-base font-semibold text-slate-700">No hay citas registradas</p>
+              <p class="text-sm text-slate-500">Cuando se registren citas aparecerán en esta lista.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
 </div>
 
