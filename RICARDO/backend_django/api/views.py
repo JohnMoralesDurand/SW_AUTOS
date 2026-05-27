@@ -163,6 +163,26 @@ class VehicleViewSet(viewsets.ModelViewSet):
             raise ValidationError({'detail': 'El kilometraje no puede ser menor al ultimo registrado'})
         serializer.save()
 
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        """Lista los vehiculos del cliente autenticado (RF-10).
+
+        El frontend llama a GET /api/vehicles/me para obtener solo los
+        vehiculos del usuario actual.
+        """
+        vehicles = Vehicle.objects.filter(owner=request.user, is_active=True).order_by('-created_at')
+        return Response(VehicleSerializer(vehicles, many=True).data)
+
+    def destroy(self, request, *args, **kwargs):
+        """Desactiva (soft-delete) el vehiculo en vez de borrarlo (RF-12, RN-10)."""
+        instance = self.get_object()
+        # Permisos: solo el dueno o un admin
+        if instance.owner_id != request.user.id and request.user.role != UserRole.ADMIN:
+            return Response({'detail': 'No puede eliminar este vehiculo'}, status=403)
+        instance.is_active = False
+        instance.save()
+        return Response(VehicleSerializer(instance).data)
+
 
 # =============================================================================
 # SERVICES

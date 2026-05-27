@@ -57,6 +57,16 @@
           {{ authService.currentUser()?.role }}
         </span>
 
+        <!-- Boton de cerrar sesion (siempre visible en el header) -->
+        <button
+          (click)="onLogout()"
+          class="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+          title="Cerrar sesión"
+        >
+          <lucide-icon [img]="logoutIcon" [size]="16"></lucide-icon>
+          <span class="hidden sm:inline">Cerrar sesión</span>
+        </button>
+
         <!-- Campana de notificaciones con dropdown -->
         <div class="relative">
           <button
