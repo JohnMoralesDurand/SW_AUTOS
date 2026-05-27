@@ -139,6 +139,7 @@ class WorkOrderItemSerializer(serializers.ModelSerializer):
 
 class WorkOrderSerializer(serializers.ModelSerializer):
     items = WorkOrderItemSerializer(many=True, read_only=True)
+    photos = serializers.SerializerMethodField()
     mechanic_name = serializers.SerializerMethodField()
     service_name = serializers.SerializerMethodField()
     vehicle_plate = serializers.SerializerMethodField()
@@ -148,10 +149,32 @@ class WorkOrderSerializer(serializers.ModelSerializer):
         model = WorkOrder
         fields = [
             'id', 'appointment', 'diagnosis', 'total_amount', 'status',
-            'closed_at', 'created_at', 'items',
+            'closed_at', 'created_at', 'items', 'photos',
             'mechanic_name', 'service_name', 'vehicle_plate', 'display_number',
         ]
         read_only_fields = ['id', 'created_at', 'closed_at', 'total_amount']
+
+    def get_photos(self, obj):
+        """Lista de fotos asociadas a la orden con URL absoluta."""
+        request = self.context.get('request')
+        photos = obj.photos.all().order_by('-uploaded_at')
+        result = []
+        for p in photos:
+            url = p.foto.url if p.foto else None
+            if url and request:
+                url = request.build_absolute_uri(url)
+            result.append({
+                'id': p.id,
+                'url_foto': url,
+                'descripcion': p.descripcion,
+                'tipo': p.tipo,
+                'uploaded_at': p.uploaded_at.isoformat() if p.uploaded_at else None,
+                'uploaded_by_name': (
+                    f'{p.uploaded_by.first_name} {p.uploaded_by.last_name}'
+                    if p.uploaded_by else None
+                ),
+            })
+        return result
 
     def get_mechanic_name(self, obj):
         ap = obj.appointment
@@ -246,7 +269,7 @@ class DiaSerializer(serializers.ModelSerializer):
 # Fotos de Servicio
 # =============================================================================
 class ServicePhotoSerializer(serializers.ModelSerializer):
-    """Foto con URL completa lista para mostrar en el frontend."""
+    """Foto vinculada a una orden de trabajo con URL absoluta para el frontend."""
 
     url_foto = serializers.SerializerMethodField()
     uploaded_by_name = serializers.SerializerMethodField()
@@ -255,7 +278,7 @@ class ServicePhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServicePhoto
         fields = [
-            'id', 'service', 'foto', 'url_foto', 'descripcion', 'tipo',
+            'id', 'work_order', 'foto', 'url_foto', 'descripcion', 'tipo',
             'uploaded_by', 'uploaded_at',
             'uploaded_by_name', 'service_name',
         ]
@@ -276,4 +299,7 @@ class ServicePhotoSerializer(serializers.ModelSerializer):
         return None
 
     def get_service_name(self, obj):
-        return obj.service.name if obj.service else None
+        """Nombre del servicio de la orden (informativo)."""
+        if obj.work_order and obj.work_order.appointment and obj.work_order.appointment.service:
+            return obj.work_order.appointment.service.name
+        return None

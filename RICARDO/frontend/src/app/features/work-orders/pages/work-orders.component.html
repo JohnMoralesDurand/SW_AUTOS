@@ -153,6 +153,117 @@
               }
             </div>
 
+            <!-- ============================================================
+                 FOTOS DE LA ORDEN (entrada y salida del auto)
+                 Evidencia fotografica del estado del vehiculo al entrar y salir.
+                 - Staff (admin/mecanico): puede subir y eliminar fotos.
+                 - Cliente: solo ve las fotos (en el detalle de su cita).
+                 ============================================================ -->
+            <div>
+              <h4 class="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <lucide-icon [img]="cameraIcon" [size]="16"></lucide-icon>
+                Fotos del auto (entrada / salida)
+              </h4>
+
+              <!-- Formulario de subida (solo admin/mecanico cuando la orden esta abierta) -->
+              @if (order.status === 'open' && !authService.isClient()) {
+                <div class="mb-3 rounded-xl border border-sky-200 bg-sky-50 p-3">
+                  <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div>
+                      <label class="form-label">Imagen <span class="text-red-500">*</span></label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        (change)="onFileSelected($event)"
+                        class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-mint-500 file:px-3 file:py-2 file:text-white hover:file:bg-mint-600"
+                      />
+                      <p class="mt-1 text-xs text-slate-500">JPG / PNG / WEBP (max 10 MB)</p>
+                    </div>
+                    <div>
+                      <label class="form-label">Tipo</label>
+                      <select
+                        [ngModel]="uploadTipo()"
+                        (ngModelChange)="uploadTipo.set($event)"
+                        class="form-input"
+                      >
+                        <option value="entrada">Entrada (auto ingresa sin daños)</option>
+                        <option value="salida">Salida (auto se retira sin daños)</option>
+                        <option value="general">General</option>
+                      </select>
+                    </div>
+                    <div class="md:col-span-2">
+                      <label class="form-label">Descripción (opcional)</label>
+                      <input
+                        type="text"
+                        [ngModel]="uploadDescripcion()"
+                        (ngModelChange)="uploadDescripcion.set($event)"
+                        placeholder="Ej: vista frontal, lado derecho..."
+                        class="form-input"
+                      />
+                    </div>
+                    @if (selectedPreview()) {
+                      <div class="md:col-span-2">
+                        <p class="form-label">Vista previa</p>
+                        <img [src]="selectedPreview()" alt="Preview" class="max-h-32 rounded-lg border border-slate-200" />
+                      </div>
+                    }
+                  </div>
+
+                  @if (photoError()) {
+                    <p class="mt-2 text-sm text-red-600">{{ photoError() }}</p>
+                  }
+
+                  <div class="mt-3 flex justify-end">
+                    <button
+                      (click)="uploadPhoto(order)"
+                      class="btn-primary"
+                      [disabled]="!selectedFile() || uploadingPhoto()"
+                    >
+                      <lucide-icon [img]="uploadIcon" [size]="14"></lucide-icon>
+                      {{ uploadingPhoto() ? 'Subiendo...' : 'Subir foto' }}
+                    </button>
+                  </div>
+                </div>
+              }
+
+              <!-- Galeria de fotos (visible para todos) -->
+              @if (!order.photos || order.photos.length === 0) {
+                <p class="text-xs italic text-slate-500">Aún no hay fotos registradas.</p>
+              } @else {
+                <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                  @for (photo of order.photos; track photo.id) {
+                    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                      <a [href]="photo.url_foto" target="_blank">
+                        <img
+                          [src]="photo.url_foto"
+                          [alt]="photo.descripcion || 'Foto del auto'"
+                          class="h-32 w-full object-cover transition hover:opacity-90"
+                        />
+                      </a>
+                      <div class="space-y-1 p-2">
+                        <div class="flex items-center justify-between">
+                          <p-tag [value]="tipoLabel(photo.tipo)" [severity]="tipoSeverity(photo.tipo)"></p-tag>
+                          @if (order.status === 'open' && !authService.isClient()) {
+                            <button
+                              (click)="deletePhoto(photo)"
+                              class="rounded p-1 text-red-600 hover:bg-red-50"
+                              title="Eliminar foto"
+                            >
+                              <lucide-icon [img]="trashIcon" [size]="12"></lucide-icon>
+                            </button>
+                          }
+                        </div>
+                        @if (photo.descripcion) {
+                          <p class="text-[11px] text-slate-600 line-clamp-2">{{ photo.descripcion }}</p>
+                        }
+                        <p class="text-[10px] text-slate-400">{{ photo.uploaded_at | date: 'short' }}</p>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+
             <!-- Cerrar orden -->
             @if (order.status === 'open') {
               <div class="flex items-center justify-between rounded-xl bg-mint-50 px-4 py-3">

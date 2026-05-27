@@ -14,6 +14,15 @@ export interface WorkOrderItem {
   unit_price: number;
 }
 
+export interface WorkOrderPhoto {
+  id: number;
+  url_foto: string;
+  descripcion: string | null;
+  tipo: string | null;          // 'entrada' | 'salida' | 'general'
+  uploaded_at: string;
+  uploaded_by_name?: string | null;
+}
+
 export interface WorkOrder {
   id: number;
   appointment_id: number;
@@ -23,6 +32,7 @@ export interface WorkOrder {
   closed_at: string | null;
   created_at: string;
   items: WorkOrderItem[];
+  photos?: WorkOrderPhoto[];     // nuevo: fotos de entrada/salida del auto
   mechanic_name?: string | null;
   service_name?: string | null;
   vehicle_plate?: string | null;

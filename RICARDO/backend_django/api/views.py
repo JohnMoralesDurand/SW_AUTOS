@@ -729,6 +729,13 @@ class DiaBloqueViewSet(viewsets.ModelViewSet):
 # SERVICE PHOTOS (FotosServicio)
 # =============================================================================
 class ServicePhotoViewSet(viewsets.ModelViewSet):
+    """CRUD de fotos asociadas a una OrdenTrabajo (FotosServicio).
+
+    El mecanico sube fotos del auto al entrar (sin daños) y al salir.
+    Sirve como evidencia ante reclamos. Cliente y admin pueden verlas
+    cuando la orden esta cerrada.
+    """
+
     serializer_class = ServicePhotoSerializer
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
@@ -739,29 +746,45 @@ class ServicePhotoViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = ServicePhoto.objects.all()
-        service_id = self.request.query_params.get('service_id')
-        if service_id:
-            qs = qs.filter(service_id=service_id)
+        work_order_id = self.request.query_params.get('work_order_id')
+        if work_order_id:
+            qs = qs.filter(work_order_id=work_order_id)
+        # Compatibilidad con el cliente (solo ve fotos de sus propias ordenes)
+        user = self.request.user
+        if user and user.is_authenticated and user.role == UserRole.CLIENT:
+            qs = qs.filter(work_order__appointment__client=user)
         return qs.order_by('-uploaded_at')
 
     @action(detail=False, methods=['post'], permission_classes=[IsStaff],
             parser_classes=[MultiPartParser, FormParser])
     def upload(self, request):
-        """Sube una foto y la asocia a un servicio."""
-        service_id = request.data.get('service_id')
+        """Sube una foto y la asocia a una orden de trabajo."""
+        work_order_id = request.data.get('work_order_id')
         file = request.FILES.get('file')
         tipo = request.data.get('tipo', 'general')
         descripcion = request.data.get('descripcion', '')
-        if not service_id or not file:
-            return Response({'detail': 'service_id y file son requeridos'}, status=400)
+        if not work_order_id or not file:
+            return Response(
+                {'detail': 'work_order_id y file son requeridos'}, status=400,
+            )
         try:
-            service = Service.objects.get(id=service_id)
-        except Service.DoesNotExist:
-            return Response({'detail': 'Servicio no encontrado'}, status=404)
+            work_order = WorkOrder.objects.get(id=work_order_id)
+        except WorkOrder.DoesNotExist:
+            return Response({'detail': 'Orden de trabajo no encontrada'}, status=404)
+
+        # Si el usuario es mecanico, solo puede subir a sus propias ordenes
+        if request.user.role == UserRole.MECHANIC:
+            if work_order.appointment.mechanic_id != request.user.id:
+                return Response(
+                    {'detail': 'Solo puedes subir fotos a tus propias ordenes'},
+                    status=403,
+                )
+
         if tipo not in ('entrada', 'salida', 'general'):
             tipo = 'general'
+
         photo = ServicePhoto.objects.create(
-            service=service, foto=file, descripcion=descripcion,
+            work_order=work_order, foto=file, descripcion=descripcion,
             tipo=tipo, uploaded_by=request.user,
         )
         return Response(

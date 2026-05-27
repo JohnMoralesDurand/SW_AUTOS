@@ -238,6 +238,37 @@
               }
             </div>
 
+            <!-- Fotos del auto (entrada/salida) -->
+            @if (wo.photos && wo.photos.length > 0) {
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">Fotos del auto</p>
+                <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  @for (photo of wo.photos; track photo.id) {
+                    <div class="overflow-hidden rounded-lg border border-slate-200">
+                      <a [href]="photo.url_foto" target="_blank">
+                        <img
+                          [src]="photo.url_foto"
+                          [alt]="photo.descripcion || 'Foto del servicio'"
+                          class="h-24 w-full object-cover transition hover:opacity-90"
+                        />
+                      </a>
+                      <div class="px-2 py-1">
+                        <span class="text-[10px] font-semibold uppercase"
+                              [class.text-sky-700]="photo.tipo === 'entrada'"
+                              [class.text-emerald-700]="photo.tipo === 'salida'"
+                              [class.text-slate-500]="photo.tipo !== 'entrada' && photo.tipo !== 'salida'">
+                          {{ photo.tipo === 'entrada' ? 'Entrada' : photo.tipo === 'salida' ? 'Salida' : 'General' }}
+                        </span>
+                        @if (photo.descripcion) {
+                          <p class="text-[10px] text-slate-600 line-clamp-1">{{ photo.descripcion }}</p>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
             <!-- Total -->
             <div class="flex items-center justify-between rounded-lg bg-mint-50 p-3">
               <span class="text-sm font-medium text-slate-700">Total pagado</span>

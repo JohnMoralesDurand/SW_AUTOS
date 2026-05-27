@@ -289,13 +289,18 @@ class DiaBloque(models.Model):
 
 
 class ServicePhoto(models.Model):
-    """Foto asociada a un servicio del catalogo (FotosServicio del diagrama).
+    """Foto vinculada a una OrdenTrabajo (FotosServicio del diagrama).
 
-    Permite registrar fotos del auto al entrar/salir del taller como evidencia.
+    Permite registrar evidencia fotografica del auto al ENTRAR al taller
+    (estado inicial sin daños) y al SALIR (estado final sin daños).
+    Sirve como respaldo ante reclamos de "el auto vino con rasguños".
+
+    El mecanico sube las fotos durante su orden de trabajo; el admin y el
+    cliente pueden visualizarlas cuando la orden se cierra.
     """
 
-    service = models.ForeignKey(
-        Service, on_delete=models.CASCADE, related_name='photos',
+    work_order = models.ForeignKey(
+        WorkOrder, on_delete=models.CASCADE, related_name='photos',
     )
     # ImageField: Django maneja el upload y guarda el archivo en MEDIA_ROOT/service_photos/
     foto = models.ImageField(upload_to='service_photos/')
@@ -312,4 +317,4 @@ class ServicePhoto(models.Model):
         ordering = ['-uploaded_at']
 
     def __str__(self):
-        return f'Foto #{self.id} de {self.service}'
+        return f'Foto #{self.id} de orden #{self.work_order_id}'

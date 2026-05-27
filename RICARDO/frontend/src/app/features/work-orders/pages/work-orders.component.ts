@@ -20,6 +20,9 @@ import {
   Save,
   CheckCircle,
   AlertCircle,
+  Camera,
+  Upload,
+  Trash2,
 } from 'lucide-angular';
 
 // PrimeNG (referencia: profesor en DESARROLLO_WEB_2.0)
@@ -30,6 +33,11 @@ import {
   WorkOrder,
   WorkOrderService,
 } from '../../../core/services/work-order.service';
+import {
+  ServicePhoto,
+  ServicePhotoService,
+} from '../../../core/services/service-photo.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { extractErrorMessage } from '../../../core/utils/http-error';
 
 @Component({
@@ -49,6 +57,9 @@ export class WorkOrdersComponent implements OnInit {
   readonly saveIcon = Save;
   readonly checkIcon = CheckCircle;
   readonly alertIcon = AlertCircle;
+  readonly cameraIcon = Camera;
+  readonly uploadIcon = Upload;
+  readonly trashIcon = Trash2;
 
   readonly orders = signal<WorkOrder[]>([]);
   readonly statusFilter = signal<'all' | 'open' | 'closed'>('all');
@@ -68,9 +79,19 @@ export class WorkOrdersComponent implements OnInit {
   });
   readonly addingItem = signal(false);
 
+  // ---- Estado para fotos de la orden (entrada / salida) ----
+  readonly selectedFile = signal<File | null>(null);
+  readonly selectedPreview = signal<string | null>(null);
+  readonly uploadTipo = signal<'entrada' | 'salida' | 'general'>('entrada');
+  readonly uploadDescripcion = signal<string>('');
+  readonly uploadingPhoto = signal(false);
+  readonly photoError = signal<string | null>(null);
+
   constructor(
     private fb: FormBuilder,
     private workOrderService: WorkOrderService,
+    public authService: AuthService,
+    public photoService: ServicePhotoService,
   ) {}
 
   ngOnInit(): void {
@@ -164,5 +185,85 @@ export class WorkOrdersComponent implements OnInit {
 
   itemTotal(item: { quantity: number; unit_price: number }): number {
     return item.quantity * item.unit_price;
+  }
+
+  // ===========================================================================
+  // Manejo de fotos de la orden (entrada/salida del auto)
+  // ===========================================================================
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.photoError.set('El archivo seleccionado no es una imagen.');
+      return;
+    }
+    if (this.selectedPreview()) {
+      URL.revokeObjectURL(this.selectedPreview()!);
+    }
+    this.selectedFile.set(file);
+    this.selectedPreview.set(URL.createObjectURL(file));
+    this.photoError.set(null);
+  }
+
+  uploadPhoto(order: WorkOrder): void {
+    const file = this.selectedFile();
+    if (!file) {
+      this.photoError.set('Selecciona una imagen antes de subir.');
+      return;
+    }
+    this.uploadingPhoto.set(true);
+    this.photoError.set(null);
+    this.photoService
+      .upload(order.id, file, this.uploadTipo(), this.uploadDescripcion() || undefined)
+      .subscribe({
+        next: () => {
+          this.uploadingPhoto.set(false);
+          if (this.selectedPreview()) {
+            URL.revokeObjectURL(this.selectedPreview()!);
+          }
+          this.selectedFile.set(null);
+          this.selectedPreview.set(null);
+          this.uploadDescripcion.set('');
+          // Recarga la lista para refrescar las fotos
+          this.load();
+        },
+        error: (err) => {
+          this.uploadingPhoto.set(false);
+          this.photoError.set(
+            extractErrorMessage(err, 'No se pudo subir la foto.'),
+          );
+        },
+      });
+  }
+
+  deletePhoto(photo: { id: number }): void {
+    if (!confirm('¿Eliminar esta foto?')) return;
+    this.photoService.delete(photo.id).subscribe({
+      next: () => this.load(),
+      error: (err) => {
+        this.photoError.set(
+          extractErrorMessage(err, 'No se pudo eliminar la foto.'),
+        );
+      },
+    });
+  }
+
+  tipoLabel(tipo: string | null | undefined): string {
+    switch ((tipo || '').toLowerCase()) {
+      case 'entrada': return 'Entrada';
+      case 'salida':  return 'Salida';
+      default:        return 'General';
+    }
+  }
+
+  tipoSeverity(
+    tipo: string | null | undefined,
+  ): 'success' | 'secondary' | 'info' | 'warning' | 'danger' | 'contrast' {
+    switch ((tipo || '').toLowerCase()) {
+      case 'entrada': return 'info';
+      case 'salida':  return 'success';
+      default:        return 'secondary';
+    }
   }
 }
