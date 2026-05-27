@@ -647,10 +647,16 @@ class NotificationViewSet(viewsets.ModelViewSet):
 # para no romper compatibilidad con el frontend.
 # =============================================================================
 class DiaViewSet(viewsets.ModelViewSet):
-    """Horario del taller por dia (con sus bloques)."""
+    """Horario del taller por dia (con sus bloques).
+
+    Usa day_of_week (0-6) como identificador en la URL en vez del id de
+    base de datos. Esto mantiene compatibilidad con el frontend que ya
+    enviaba day_of_week (era asi en el FastAPI original).
+    """
 
     queryset = Dia.objects.all().order_by('day_of_week')
     serializer_class = DiaSerializer
+    lookup_field = 'day_of_week'
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):
