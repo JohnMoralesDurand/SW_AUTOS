@@ -659,7 +659,9 @@ class ServicePhotoViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes([IsAdmin])
 def reports_summary(request):
-    total_clients = User.objects.filter(role=UserRole.CLIENT).count()
+    # Clientes activos = clientes distintos que han hecho al menos una cita
+    # (coincide con el calculo del FastAPI original)
+    total_clients = Appointment.objects.values('client_id').distinct().count()
     total_appointments = Appointment.objects.count()
     pending = Appointment.objects.filter(status=AppointmentStatus.PENDING).count()
     completed = Appointment.objects.filter(status=AppointmentStatus.COMPLETED).count()
@@ -704,6 +706,96 @@ def reports_top_services(request):
     limit = int(request.query_params.get('limit', 5))
     rows = Service.objects.annotate(total=Count('appointment')).order_by('-total')[:limit]
     return Response([{'service': s.name, 'total': s.total} for s in rows])
+
+
+# =============================================================================
+# VEHICLE HISTORY (Historial Vehicular - RF-35, RF-36)
+# =============================================================================
+KM_INTERVAL = 5000   # cada 5000 km recomendar revision
+DAYS_INTERVAL = 180  # o cada 6 meses
+
+
+def _build_vehicle_history(vehicle):
+    """Construye el dict de historial completo de un vehiculo."""
+    completed = (
+        Appointment.objects
+        .filter(vehicle=vehicle, status=AppointmentStatus.COMPLETED)
+        .order_by('-scheduled_at')
+    )
+    return {
+        'vehicle': {
+            'id': vehicle.id,
+            'license_plate': vehicle.license_plate,
+            'brand': vehicle.brand,
+            'model': vehicle.model,
+            'mileage': vehicle.mileage,
+        },
+        'history': [
+            {
+                'appointment_id': a.id,
+                'service': a.service.name if a.service else None,
+                'date': a.scheduled_at.isoformat(),
+                'amount': a.frozen_price,
+                'mechanic': (
+                    f'{a.mechanic.first_name} {a.mechanic.last_name}' if a.mechanic else None
+                ),
+            }
+            for a in completed
+        ],
+    }
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def vehicle_history(request, vehicle_id):
+    """Historial completo de servicios de un vehiculo (RF-35)."""
+    try:
+        vehicle = Vehicle.objects.get(id=vehicle_id)
+    except Vehicle.DoesNotExist:
+        return Response({'detail': 'Vehiculo no encontrado'}, status=404)
+    user = request.user
+    if user.role == UserRole.CLIENT and vehicle.owner_id != user.id:
+        return Response({'detail': 'No autorizado'}, status=403)
+    return Response(_build_vehicle_history(vehicle))
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def vehicle_maintenance_suggestions(request, vehicle_id):
+    """Sugerencias de mantenimiento preventivo (RF-36)."""
+    try:
+        vehicle = Vehicle.objects.get(id=vehicle_id)
+    except Vehicle.DoesNotExist:
+        return Response({'detail': 'Vehiculo no encontrado'}, status=404)
+    user = request.user
+    if user.role == UserRole.CLIENT and vehicle.owner_id != user.id:
+        return Response({'detail': 'No autorizado'}, status=403)
+
+    history_data = _build_vehicle_history(vehicle)
+    suggestions = []
+
+    if history_data['history']:
+        last = history_data['history'][0]
+        last_date = datetime.fromisoformat(last['date'].replace('Z', '+00:00'))
+        if last_date.tzinfo is None:
+            last_date = timezone.make_aware(last_date)
+        days_since = (timezone.now() - last_date).days
+        if days_since >= DAYS_INTERVAL:
+            suggestions.append(
+                f'Han pasado {days_since} dias desde el ultimo servicio. '
+                'Se recomienda una revision general.'
+            )
+
+    if vehicle.mileage >= KM_INTERVAL and vehicle.mileage % KM_INTERVAL < 1000:
+        suggestions.append(
+            f'Su vehiculo tiene {vehicle.mileage} km. '
+            'Considere un cambio de aceite y revision de filtros.'
+        )
+
+    if not suggestions:
+        suggestions.append('No hay mantenimientos preventivos pendientes por el momento.')
+
+    return Response({'vehicle_id': vehicle_id, 'suggestions': suggestions})
 
 
 @api_view(['GET'])

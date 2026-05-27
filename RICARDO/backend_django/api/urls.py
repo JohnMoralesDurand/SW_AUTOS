@@ -35,6 +35,11 @@ urlpatterns = [
     path('api/reports/top-services', views.reports_top_services, name='reports-top'),
     path('api/reports/income', views.reports_income, name='reports-income'),
 
+    # Historial vehicular (RF-35, RF-36)
+    path('api/vehicle-history/<int:vehicle_id>', views.vehicle_history, name='vehicle-history'),
+    path('api/vehicle-history/<int:vehicle_id>/maintenance-suggestions',
+         views.vehicle_maintenance_suggestions, name='vehicle-maintenance'),
+
     # ViewSets del router
     path('api/', include(router.urls)),
 ]
