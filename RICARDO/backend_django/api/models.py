@@ -134,6 +134,13 @@ class Appointment(models.Model):
         related_name='mechanic_appointments',
     )
 
+    # Vinculo al bloque horario del taller (FK opcional). Permite saber
+    # exactamente en que bloque del dia se atendera la cita.
+    dia_bloque = models.ForeignKey(
+        'DiaBloque', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='appointments',
+    )
+
     scheduled_at = models.DateTimeField(db_index=True)
     duration_minutes = models.IntegerField()
     frozen_price = models.FloatField()
@@ -221,25 +228,64 @@ class Notification(models.Model):
         return f'{self.title} ({self.user})'
 
 
-class BusinessHours(models.Model):
-    """Horario de atencion del taller por dia de la semana.
+class Dia(models.Model):
+    """Dia de la semana del horario del taller.
 
-    day_of_week: 0=Lunes ... 6=Domingo.
+    Reemplaza al antiguo BusinessHours dividiendolo en 3 modelos:
+    Dia (configuracion del dia) + Bloque (horarios reutilizables) +
+    DiaBloque (intermedia: que bloques estan asignados a cada dia).
+
+    Esto permite que un dia tenga MULTIPLES bloques (ej: 8-12 manana + 14-18 tarde).
+
+    day_of_week: 0=Lunes ... 6=Domingo
     """
 
     day_of_week = models.IntegerField(unique=True, db_index=True)
     is_open = models.BooleanField(default=True)
-    open_time = models.CharField(max_length=5, default='08:00')
-    close_time = models.CharField(max_length=5, default='18:00')
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = 'business_hours'
+        db_table = 'dia'
         ordering = ['day_of_week']
 
     def __str__(self):
         dias = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
         return dias[self.day_of_week] if 0 <= self.day_of_week <= 6 else f'Dia {self.day_of_week}'
+
+
+class Bloque(models.Model):
+    """Bloque horario reutilizable (ej: 08:00-12:00, 14:00-18:00).
+
+    Un mismo bloque puede ser usado en varios dias (relacion N a N via DiaBloque).
+    """
+
+    open_time = models.CharField(max_length=5)   # "HH:MM"
+    close_time = models.CharField(max_length=5)  # "HH:MM"
+
+    class Meta:
+        db_table = 'bloque'
+        ordering = ['open_time']
+
+    def __str__(self):
+        return f'{self.open_time} - {self.close_time}'
+
+
+class DiaBloque(models.Model):
+    """Tabla intermedia: un dia tiene 0..* bloques horarios.
+
+    Permite que el lunes tenga horario partido (8-12 y 14-18) por ejemplo.
+    """
+
+    dia = models.ForeignKey(Dia, on_delete=models.CASCADE, related_name='bloques')
+    bloque = models.ForeignKey(Bloque, on_delete=models.CASCADE, related_name='dias')
+
+    class Meta:
+        db_table = 'dia_bloque'
+        unique_together = ('dia', 'bloque')
+        ordering = ['dia__day_of_week', 'bloque__open_time']
+
+    def __str__(self):
+        return f'{self.dia} -> {self.bloque}'
 
 
 class ServicePhoto(models.Model):

@@ -11,7 +11,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'autoserv.settings')
 django.setup()
 
 
-from api.models import BusinessHours, Service, User, UserRole  # noqa: E402
+from api.models import Bloque, Dia, DiaBloque, Service, User, UserRole  # noqa: E402
 
 
 def run_seed():
@@ -107,24 +107,38 @@ def run_seed():
         print(f'  {"Creado" if created else "Saltado"}: {s.name}')
 
     # -------------------------------------------------------------------
-    # HORARIOS DEL TALLER (Lun-Vie 8-18, Sab 8-13, Dom cerrado)
+    # HORARIOS DEL TALLER (estructura Dia + Bloque + DiaBloque)
+    # Lun-Vie 8-18, Sab 8-13, Dom cerrado
     # -------------------------------------------------------------------
     schedule = [
-        (0, True, '08:00', '18:00'),
-        (1, True, '08:00', '18:00'),
-        (2, True, '08:00', '18:00'),
-        (3, True, '08:00', '18:00'),
-        (4, True, '08:00', '18:00'),
-        (5, True, '08:00', '13:00'),
-        (6, False, '00:00', '00:00'),
+        (0, True,  [('08:00', '18:00')]),  # Lunes
+        (1, True,  [('08:00', '18:00')]),  # Martes
+        (2, True,  [('08:00', '18:00')]),  # Miercoles
+        (3, True,  [('08:00', '18:00')]),  # Jueves
+        (4, True,  [('08:00', '18:00')]),  # Viernes
+        (5, True,  [('08:00', '13:00')]),  # Sabado
+        (6, False, []),                    # Domingo cerrado
     ]
-    print('\n=== Horarios ===')
-    for day, is_open, op, cl in schedule:
-        bh, created = BusinessHours.objects.get_or_create(
+    nombres_dia = ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado', 'Domingo']
+
+    print('\n=== Horarios (Dia + Bloque + DiaBloque) ===')
+    for day, is_open, bloques in schedule:
+        dia, created = Dia.objects.get_or_create(
             day_of_week=day,
-            defaults={'is_open': is_open, 'open_time': op, 'close_time': cl},
+            defaults={'is_open': is_open},
         )
-        print(f'  {"Creado" if created else "Saltado"}: dia {day}')
+        if not created:
+            dia.is_open = is_open
+            dia.save()
+
+        # Limpia y vuelve a asignar los bloques del dia
+        DiaBloque.objects.filter(dia=dia).delete()
+        for op, cl in bloques:
+            bloque, _ = Bloque.objects.get_or_create(open_time=op, close_time=cl)
+            DiaBloque.objects.get_or_create(dia=dia, bloque=bloque)
+        marca = 'Creado' if created else 'Actualizado'
+        bloques_str = ', '.join(f'{a}-{b}' for a, b in bloques) or 'cerrado'
+        print(f'  {marca}: {nombres_dia[day]} ({bloques_str})')
 
     print('\nSeed completado correctamente.')
 

@@ -16,13 +16,14 @@ from rest_framework.views import APIView
 
 from .auth import create_access_token
 from .models import (
-    Appointment, AppointmentStatus, BusinessHours,
+    Appointment, AppointmentStatus, Bloque, Dia, DiaBloque,
     Notification, NotificationType, Service, ServicePhoto,
     User, UserRole, Vehicle, WorkOrder, WorkOrderItem, WorkOrderStatus,
 )
 from .permissions import IsAdmin, IsStaff
 from .serializers import (
-    AppointmentSerializer, BusinessHoursSerializer, NotificationSerializer,
+    AppointmentSerializer, BloqueSerializer, DiaBloqueSerializer,
+    DiaSerializer, NotificationSerializer,
     ServicePhotoSerializer, ServiceSerializer, UserCreateSerializer,
     UserSerializer, VehicleSerializer, WorkOrderSerializer,
 )
@@ -222,14 +223,35 @@ def public_services(request):
 # =============================================================================
 # APPOINTMENTS - Aqui viven la mayoria de las reglas de negocio
 # =============================================================================
-def _get_day_hours(day_of_week: int):
+def _get_day_blocks(day_of_week: int):
+    """Devuelve (is_open, [(open_time, close_time), ...]) para un dia.
+
+    Soporta multiples bloques por dia (Dia -> DiaBloque -> Bloque).
+    """
     try:
-        row = BusinessHours.objects.get(day_of_week=day_of_week)
-        oh, om = (int(x) for x in row.open_time.split(':'))
-        ch, cm = (int(x) for x in row.close_time.split(':'))
-        return row.is_open, time(oh, om), time(ch, cm)
-    except BusinessHours.DoesNotExist:
+        dia = Dia.objects.get(day_of_week=day_of_week)
+    except Dia.DoesNotExist:
+        return False, []
+    if not dia.is_open:
+        return False, []
+    bloques = []
+    for db in dia.bloques.select_related('bloque').order_by('bloque__open_time'):
+        b = db.bloque
+        oh, om = (int(x) for x in b.open_time.split(':'))
+        ch, cm = (int(x) for x in b.close_time.split(':'))
+        bloques.append((time(oh, om), time(ch, cm), db))
+    return True, bloques
+
+
+def _get_day_hours(day_of_week: int):
+    """Devuelve (is_open, open_time, close_time) usando el primer bloque del dia.
+
+    Mantenido por compatibilidad con codigo que asume un solo horario por dia.
+    """
+    is_open, bloques = _get_day_blocks(day_of_week)
+    if not is_open or not bloques:
         return False, time(0, 0), time(0, 0)
+    return True, bloques[0][0], bloques[-1][1]
 
 
 def _parse_dt(value):
@@ -245,16 +267,35 @@ def _parse_dt(value):
 
 
 def _validate_business_hours(scheduled_at, duration):
-    """RN-03."""
+    """RN-03: la cita debe encajar dentro de algun bloque horario del dia."""
     weekday = scheduled_at.weekday()
-    is_open, open_t, close_t = _get_day_hours(weekday)
+    is_open, bloques = _get_day_blocks(weekday)
     if not is_open:
         return 'El taller no atiende ese dia'
-    start_t = scheduled_at.time()
+
     end_dt = scheduled_at + timedelta(minutes=duration)
+    if end_dt.date() != scheduled_at.date():
+        return 'La hora seleccionada se extiende fuera del dia'
+    start_t = scheduled_at.time()
     end_t = end_dt.time()
-    if start_t < open_t or end_t > close_t or end_dt.date() != scheduled_at.date():
-        return 'La hora seleccionada esta fuera del horario de atencion'
+
+    # Debe encajar completamente dentro de algun bloque del dia
+    for open_t, close_t, _db in bloques:
+        if start_t >= open_t and end_t <= close_t:
+            return None
+    return 'La hora seleccionada esta fuera del horario de atencion'
+
+
+def _get_dia_bloque_for(scheduled_at):
+    """Devuelve el DiaBloque al que pertenece la cita (o None)."""
+    weekday = scheduled_at.weekday()
+    is_open, bloques = _get_day_blocks(weekday)
+    if not is_open:
+        return None
+    start_t = scheduled_at.time()
+    for open_t, close_t, db in bloques:
+        if start_t >= open_t and start_t < close_t:
+            return db
     return None
 
 
@@ -342,12 +383,16 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             if err:
                 return Response({'detail': err}, status=400)
 
+        # Determinar a que DiaBloque pertenece la cita (referencia al horario)
+        dia_bloque = _get_dia_bloque_for(scheduled_at)
+
         appointment = Appointment.objects.create(
             client=user, vehicle=vehicle, service=service,
             scheduled_at=scheduled_at,
             duration_minutes=service.duration_minutes,
             frozen_price=service.price,  # RN-11
             notes=request.data.get('notes', None),
+            dia_bloque=dia_bloque,
         )
         Notification.objects.create(
             user=user,
@@ -596,11 +641,77 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
 
 # =============================================================================
-# BUSINESS HOURS
+# HORARIO DEL TALLER - Dia + Bloque + DiaBloque
+# -----------------------------------------------------------------------------
+# Reemplaza al antiguo BusinessHoursViewSet. La URL sigue siendo /api/schedules
+# para no romper compatibilidad con el frontend.
 # =============================================================================
-class BusinessHoursViewSet(viewsets.ModelViewSet):
-    queryset = BusinessHours.objects.all().order_by('day_of_week')
-    serializer_class = BusinessHoursSerializer
+class DiaViewSet(viewsets.ModelViewSet):
+    """Horario del taller por dia (con sus bloques)."""
+
+    queryset = Dia.objects.all().order_by('day_of_week')
+    serializer_class = DiaSerializer
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [IsAuthenticated()]
+        return [IsAdmin()]
+
+    def update(self, request, *args, **kwargs):
+        """Actualiza un dia y opcionalmente reemplaza sus bloques.
+
+        Acepta:
+        - is_open: bool
+        - open_time, close_time: cuando el dia tiene UN solo bloque (estilo BusinessHours antiguo)
+        - bloques: array opcional con multiples bloques [{open_time, close_time}, ...]
+        """
+        dia = self.get_object()
+        is_open = request.data.get('is_open')
+        if is_open is not None:
+            dia.is_open = bool(is_open)
+        dia.save()
+
+        # Si se mandan bloques (array), reemplaza la asignacion del dia
+        bloques_data = request.data.get('bloques')
+        if bloques_data is None:
+            # Compatibilidad con frontend antiguo: usa open_time/close_time como UN bloque
+            ot = request.data.get('open_time')
+            ct = request.data.get('close_time')
+            if ot and ct:
+                bloques_data = [{'open_time': ot, 'close_time': ct}]
+
+        if bloques_data is not None:
+            # Limpiar asignaciones actuales del dia
+            DiaBloque.objects.filter(dia=dia).delete()
+            # Crear/reutilizar bloques y asignarlos
+            for b in bloques_data:
+                bloque, _ = Bloque.objects.get_or_create(
+                    open_time=b['open_time'],
+                    close_time=b['close_time'],
+                )
+                DiaBloque.objects.get_or_create(dia=dia, bloque=bloque)
+
+        dia.refresh_from_db()
+        return Response(DiaSerializer(dia).data)
+
+
+class BloqueViewSet(viewsets.ModelViewSet):
+    """CRUD del catalogo de bloques horarios reutilizables."""
+
+    queryset = Bloque.objects.all().order_by('open_time')
+    serializer_class = BloqueSerializer
+
+    def get_permissions(self):
+        if self.action in ('list', 'retrieve'):
+            return [IsAuthenticated()]
+        return [IsAdmin()]
+
+
+class DiaBloqueViewSet(viewsets.ModelViewSet):
+    """Asignacion N a N entre dias y bloques (tabla intermedia)."""
+
+    queryset = DiaBloque.objects.all()
+    serializer_class = DiaBloqueSerializer
 
     def get_permissions(self):
         if self.action in ('list', 'retrieve'):

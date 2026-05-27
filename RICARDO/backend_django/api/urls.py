@@ -17,7 +17,11 @@ router.register('services', views.ServiceViewSet, basename='services')
 router.register('appointments', views.AppointmentViewSet, basename='appointments')
 router.register('work-orders', views.WorkOrderViewSet, basename='work-orders')
 router.register('notifications', views.NotificationViewSet, basename='notifications')
-router.register('schedules', views.BusinessHoursViewSet, basename='schedules')
+# Horario del taller (Dia + Bloque + DiaBloque)
+# /api/schedules sigue siendo el endpoint principal (Dia) para no romper el frontend
+router.register('schedules', views.DiaViewSet, basename='schedules')
+router.register('bloques', views.BloqueViewSet, basename='bloques')
+router.register('dia-bloques', views.DiaBloqueViewSet, basename='dia-bloques')
 router.register('service-photos', views.ServicePhotoViewSet, basename='service-photos')
 
 

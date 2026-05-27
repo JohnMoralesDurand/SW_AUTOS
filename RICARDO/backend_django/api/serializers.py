@@ -7,7 +7,7 @@
 from rest_framework import serializers
 
 from .models import (
-    Appointment, BusinessHours, Notification, Service,
+    Appointment, Bloque, Dia, DiaBloque, Notification, Service,
     ServicePhoto, User, Vehicle, WorkOrder, WorkOrderItem,
 )
 
@@ -87,6 +87,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         model = Appointment
         fields = [
             'id', 'client', 'vehicle', 'service', 'mechanic',
+            'dia_bloque',  # nuevo: referencia al bloque horario asignado
             'scheduled_at', 'duration_minutes', 'frozen_price', 'notes',
             'status', 'cancellation_reason', 'is_late_cancellation',
             'created_at',
@@ -97,6 +98,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'created_at', 'frozen_price', 'duration_minutes',
             'status', 'cancellation_reason', 'is_late_cancellation',
+            'dia_bloque',
         ]
 
     def get_client_name(self, obj):
@@ -175,13 +177,69 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 
 # =============================================================================
-# Horario del taller
+# Horario del taller (Dia + Bloque + DiaBloque)
 # =============================================================================
-class BusinessHoursSerializer(serializers.ModelSerializer):
+class BloqueSerializer(serializers.ModelSerializer):
+    """Bloque horario individual (ej: 08:00-12:00)."""
+
     class Meta:
-        model = BusinessHours
-        fields = ['id', 'day_of_week', 'is_open', 'open_time', 'close_time']
+        model = Bloque
+        fields = ['id', 'open_time', 'close_time']
         read_only_fields = ['id']
+
+
+class DiaBloqueSerializer(serializers.ModelSerializer):
+    """Asignacion de un bloque a un dia (tabla intermedia)."""
+
+    open_time = serializers.CharField(source='bloque.open_time', read_only=True)
+    close_time = serializers.CharField(source='bloque.close_time', read_only=True)
+
+    class Meta:
+        model = DiaBloque
+        fields = ['id', 'dia', 'bloque', 'open_time', 'close_time']
+        read_only_fields = ['id']
+
+
+class DiaSerializer(serializers.ModelSerializer):
+    """Dia de la semana con sus bloques horarios.
+
+    El campo `bloques` muestra todos los bloques asignados a ese dia.
+    Mantiene compatibilidad con el frontend antiguo exponiendo
+    open_time/close_time del PRIMER bloque (cuando solo hay uno).
+    """
+
+    bloques = serializers.SerializerMethodField()
+    open_time = serializers.SerializerMethodField()
+    close_time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Dia
+        fields = [
+            'id', 'day_of_week', 'is_open',
+            'bloques',                  # array de bloques (nuevo)
+            'open_time', 'close_time',  # alias del primer bloque (compatibilidad)
+        ]
+        read_only_fields = ['id']
+
+    def get_bloques(self, obj):
+        return [
+            {
+                'id': db.id,
+                'bloque_id': db.bloque.id,
+                'open_time': db.bloque.open_time,
+                'close_time': db.bloque.close_time,
+            }
+            for db in obj.bloques.select_related('bloque').order_by('bloque__open_time')
+        ]
+
+    def get_open_time(self, obj):
+        first = obj.bloques.select_related('bloque').order_by('bloque__open_time').first()
+        return first.bloque.open_time if first else None
+
+    def get_close_time(self, obj):
+        # Devuelve el cierre del ULTIMO bloque (rango total del dia)
+        last = obj.bloques.select_related('bloque').order_by('-bloque__close_time').first()
+        return last.bloque.close_time if last else None
 
 
 # =============================================================================
