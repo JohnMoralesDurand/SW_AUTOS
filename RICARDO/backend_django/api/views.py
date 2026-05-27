@@ -556,7 +556,7 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         data = []
         for wo in result:
             wo.display_number = sequence[wo.id]
-            data.append(WorkOrderSerializer(wo).data)
+            data.append(WorkOrderSerializer(wo, context={'request': request}).data)
         return Response(data)
 
     @action(detail=True, methods=['put'], url_path='diagnosis')
@@ -564,7 +564,7 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         wo = self.get_object()
         wo.diagnosis = request.data.get('diagnosis', wo.diagnosis)
         wo.save()
-        return Response(WorkOrderSerializer(wo).data)
+        return Response(WorkOrderSerializer(wo, context={'request': request}).data)
 
     @action(detail=True, methods=['post'], url_path='items')
     def add_item(self, request, pk=None):
@@ -580,7 +580,7 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         items_total = sum(i.quantity * i.unit_price for i in wo.items.all())
         wo.total_amount = wo.appointment.frozen_price + items_total
         wo.save()
-        return Response(WorkOrderSerializer(wo).data)
+        return Response(WorkOrderSerializer(wo, context={'request': request}).data)
 
     @action(detail=True, methods=['post'])
     def close(self, request, pk=None):
@@ -606,7 +606,7 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
                 f'Total: S/ {wo.total_amount:.2f}. Ya puedes recoger tu auto.'
             ),
         )
-        return Response(WorkOrderSerializer(wo).data)
+        return Response(WorkOrderSerializer(wo, context={'request': request}).data)
 
     @action(detail=False, methods=['get'],
             url_path='by-appointment/(?P<appointment_id>[^/.]+)',
@@ -619,7 +619,7 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         user = request.user
         if user.role == UserRole.CLIENT and wo.appointment.client_id != user.id:
             return Response({'detail': 'No tiene acceso a esta orden'}, status=403)
-        return Response(WorkOrderSerializer(wo).data)
+        return Response(WorkOrderSerializer(wo, context={'request': request}).data)
 
 
 # =============================================================================
