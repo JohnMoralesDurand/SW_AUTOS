@@ -1,0 +1,216 @@
+{
+  "_comment": "Seed inicial cargado en localStorage la PRIMERA vez que arranca la app. Usuarios de prueba: admin@autoserv.pe / admin123, mecanico@autoserv.pe / mecanico123, cliente@autoserv.pe / cliente123.",
+  "users": [
+    {
+      "id": 1,
+      "first_name": "Ana",
+      "last_name": "Garcia",
+      "dni": "12345678",
+      "email": "admin@autoserv.pe",
+      "phone": "999111222",
+      "role": "admin",
+      "specialty": null,
+      "work_schedule": null,
+      "is_active": true,
+      "created_at": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "first_name": "Carlos",
+      "last_name": "Lopez",
+      "dni": "87654321",
+      "email": "mecanico@autoserv.pe",
+      "phone": "999222333",
+      "role": "mechanic",
+      "specialty": "Motor",
+      "work_schedule": "Lunes a Viernes 08:00-17:00",
+      "is_active": true,
+      "created_at": "2025-01-15T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "first_name": "Maria",
+      "last_name": "Rodriguez",
+      "dni": "11223344",
+      "email": "cliente@autoserv.pe",
+      "phone": "999333444",
+      "role": "client",
+      "specialty": null,
+      "work_schedule": null,
+      "is_active": true,
+      "created_at": "2025-02-01T10:00:00Z"
+    },
+    {
+      "id": 4,
+      "first_name": "Jorge",
+      "last_name": "Mendoza",
+      "dni": "22334455",
+      "email": "jorge.mendoza@autoserv.pe",
+      "phone": "999444555",
+      "role": "mechanic",
+      "specialty": "Frenos",
+      "work_schedule": "Lunes a Viernes 09:00-18:00",
+      "is_active": true,
+      "created_at": "2025-02-05T10:00:00Z"
+    },
+    {
+      "id": 5,
+      "first_name": "Luis",
+      "last_name": "Perez",
+      "dni": "33445566",
+      "email": "luis.perez@autoserv.pe",
+      "phone": "999555666",
+      "role": "mechanic",
+      "specialty": "Electricidad",
+      "work_schedule": "Lunes a Sabado 08:00-14:00",
+      "is_active": true,
+      "created_at": "2025-02-10T10:00:00Z"
+    },
+    {
+      "id": 6,
+      "first_name": "Pedro",
+      "last_name": "Sanchez",
+      "dni": "44556677",
+      "email": "pedro.cliente@autoserv.pe",
+      "phone": "999666777",
+      "role": "client",
+      "specialty": null,
+      "work_schedule": null,
+      "is_active": true,
+      "created_at": "2025-02-15T10:00:00Z"
+    }
+  ],
+  "passwords": {
+    "1": "admin123",
+    "2": "mecanico123",
+    "3": "cliente123",
+    "4": "mecanico123",
+    "5": "mecanico123",
+    "6": "cliente123"
+  },
+  "services": [
+    {
+      "id": 1,
+      "name": "Cambio de aceite",
+      "description": "Cambio de aceite de motor y filtro de aceite.",
+      "category": "Motor",
+      "duration_minutes": 45,
+      "price": 120.00,
+      "is_active": true,
+      "created_at": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Alineamiento y balanceo",
+      "description": "Servicio completo de alineacion y balanceo de llantas.",
+      "category": "Llantas",
+      "duration_minutes": 60,
+      "price": 90.00,
+      "is_active": true,
+      "created_at": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Revision general",
+      "description": "Diagnostico computarizado y revision de 30 puntos.",
+      "category": "General",
+      "duration_minutes": 90,
+      "price": 150.00,
+      "is_active": true,
+      "created_at": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 4,
+      "name": "Cambio de pastillas de freno",
+      "description": "Reemplazo de pastillas delanteras o traseras.",
+      "category": "Frenos",
+      "duration_minutes": 60,
+      "price": 180.00,
+      "is_active": true,
+      "created_at": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 5,
+      "name": "Revision electrica",
+      "description": "Diagnostico de sistema electrico y bateria.",
+      "category": "Electricidad",
+      "duration_minutes": 60,
+      "price": 100.00,
+      "is_active": true,
+      "created_at": "2025-01-10T10:00:00Z"
+    },
+    {
+      "id": 6,
+      "name": "Cambio de bujias",
+      "description": "Reemplazo de juego completo de bujias.",
+      "category": "Motor",
+      "duration_minutes": 30,
+      "price": 80.00,
+      "is_active": true,
+      "created_at": "2025-01-10T10:00:00Z"
+    }
+  ],
+  "vehicles": [
+    {
+      "id": 1,
+      "owner_id": 3,
+      "license_plate": "ABC-123",
+      "brand": "Toyota",
+      "model": "Yaris",
+      "year": 2020,
+      "mileage": 45000,
+      "color": "Rojo",
+      "is_active": true,
+      "created_at": "2025-02-01T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "owner_id": 3,
+      "license_plate": "DEF-456",
+      "brand": "Hyundai",
+      "model": "Accent",
+      "year": 2019,
+      "mileage": 62000,
+      "color": "Blanco",
+      "is_active": true,
+      "created_at": "2025-02-15T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "owner_id": 6,
+      "license_plate": "GHI-789",
+      "brand": "Kia",
+      "model": "Rio",
+      "year": 2021,
+      "mileage": 28000,
+      "color": "Plateado",
+      "is_active": true,
+      "created_at": "2025-02-20T10:00:00Z"
+    }
+  ],
+  "appointments": [],
+  "workOrders": [],
+  "workOrderItems": [],
+  "notifications": [],
+  "photos": [],
+  "schedules": [
+    { "id": 1, "day_of_week": 0, "is_open": true,  "open_time": "08:00", "close_time": "18:00" },
+    { "id": 2, "day_of_week": 1, "is_open": true,  "open_time": "08:00", "close_time": "18:00" },
+    { "id": 3, "day_of_week": 2, "is_open": true,  "open_time": "08:00", "close_time": "18:00" },
+    { "id": 4, "day_of_week": 3, "is_open": true,  "open_time": "08:00", "close_time": "18:00" },
+    { "id": 5, "day_of_week": 4, "is_open": true,  "open_time": "08:00", "close_time": "18:00" },
+    { "id": 6, "day_of_week": 5, "is_open": true,  "open_time": "08:00", "close_time": "14:00" },
+    { "id": 7, "day_of_week": 6, "is_open": false, "open_time": "00:00", "close_time": "00:00" }
+  ],
+  "nextIds": {
+    "user": 7,
+    "vehicle": 4,
+    "service": 7,
+    "appointment": 1,
+    "workOrder": 1,
+    "workOrderItem": 1,
+    "notification": 1,
+    "photo": 1,
+    "schedule": 8
+  }
+}

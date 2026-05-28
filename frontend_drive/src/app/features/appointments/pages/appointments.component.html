@@ -1,0 +1,342 @@
+<!-- Plantilla del listado de citas -->
+<div class="space-y-6">
+  <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-800">Gestión de citas</h2>
+      <p class="text-sm text-slate-500">Reservar, confirmar y dar seguimiento a las citas del taller.</p>
+    </div>
+    @if (authService.isClient()) {
+      <a routerLink="/app/appointments/new" class="btn-primary">
+        <lucide-icon [img]="plusIcon" [size]="18"></lucide-icon>
+        Reservar cita
+      </a>
+    }
+  </div>
+
+  <!-- Filtros con colores semánticos -->
+  <div class="flex flex-wrap gap-2">
+    @for (option of statusOptions; track option.value) {
+      <button
+        type="button"
+        (click)="onFilterChange(option.value)"
+        class="chip {{ option.chipClass }}"
+        [class.is-active]="statusFilter() === option.value"
+      >
+        {{ option.label }}
+      </button>
+    }
+  </div>
+
+  <!-- Listado en tabla -->
+  <!--
+    Listado de citas con PrimeNG <p-table>
+    (siguiendo el patron del ejemplo del profesor en DESARROLLO_WEB_2.0)
+    Se mantienen los botones de accion personalizados de Tailwind para
+    no perder el flujo de RF-19 a RF-24.
+  -->
+  <div class="card overflow-x-auto">
+    <p-table [value]="appointments()" [rows]="10" [paginator]="appointments().length > 10"
+             styleClass="p-datatable-sm" responsiveLayout="scroll"
+             [tableStyle]="{ 'min-width': '60rem' }">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Fecha</th>
+          <th>Servicio</th>
+          <th>Vehiculo</th>
+          <th>Cliente</th>
+          <th>Mecanico</th>
+          <th>Precio</th>
+          <th>Estado</th>
+          <th class="text-right">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-appointment>
+        <tr>
+          <td>{{ appointment.scheduled_at | date: 'short' }}</td>
+          <td>{{ appointment.service_name }}</td>
+          <td class="font-mono text-xs">{{ appointment.vehicle_plate }}</td>
+          <td>{{ appointment.client_name }}</td>
+          <td>{{ appointment.mechanic_name || '—' }}</td>
+          <td>S/ {{ appointment.frozen_price | number: '1.2-2' }}</td>
+          <td>
+            <p-tag [value]="getStatusLabel(appointment.status)"
+                   [severity]="appointment.status === 'completed' ? 'success'
+                              : appointment.status === 'cancelled' ? 'danger'
+                              : appointment.status === 'in_progress' ? 'info'
+                              : appointment.status === 'confirmed' ? 'info'
+                              : 'warning'">
+            </p-tag>
+          </td>
+          <td class="text-right">
+            <div class="flex justify-end gap-1">
+              @if (appointment.status === 'pending' && !authService.isClient()) {
+                <button (click)="onConfirm(appointment)" class="rounded-lg p-1.5 text-mint-600 hover:bg-mint-50" title="Confirmar">
+                  <lucide-icon [img]="confirmIcon" [size]="18"></lucide-icon>
+                </button>
+              }
+              @if (appointment.status === 'confirmed' && authService.isAdmin()) {
+                <button (click)="openAssignModal(appointment)" class="rounded-lg p-1.5 text-violet-600 hover:bg-violet-50" title="Asignar mecánico">
+                  <lucide-icon [img]="assignIcon" [size]="18"></lucide-icon>
+                </button>
+              }
+              @if (appointment.status === 'confirmed' && !authService.isClient()) {
+                <button (click)="onStart(appointment)" class="rounded-lg p-1.5 text-sky-600 hover:bg-sky-50" title="Iniciar atención">
+                  <lucide-icon [img]="startIcon" [size]="18"></lucide-icon>
+                </button>
+              }
+              @if (appointment.status === 'pending' || appointment.status === 'confirmed') {
+                <button (click)="openRescheduleModal(appointment)" class="rounded-lg p-1.5 text-amber-600 hover:bg-amber-50" title="Reagendar">
+                  <lucide-icon [img]="rescheduleIcon" [size]="18"></lucide-icon>
+                </button>
+                <button (click)="onCancel(appointment)" class="rounded-lg p-1.5 text-red-600 hover:bg-red-50" title="Cancelar">
+                  <lucide-icon [img]="cancelIcon" [size]="18"></lucide-icon>
+                </button>
+              }
+              @if (appointment.status === 'completed') {
+                <button (click)="openDetailModal(appointment)" class="rounded-lg p-1.5 text-mint-600 hover:bg-mint-50" title="Ver detalle">
+                  <lucide-icon [img]="viewIcon" [size]="18"></lucide-icon>
+                </button>
+              }
+              @if (!hasActions(appointment)) {
+                <span class="text-slate-400">—</span>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="flex flex-col items-center py-16">
+              <div class="rounded-2xl bg-mint-100 p-4 text-mint-600">
+                <lucide-icon [img]="calendarIcon" [size]="32"></lucide-icon>
+              </div>
+              <p class="mt-3 text-base font-semibold text-slate-700">No hay citas registradas</p>
+              <p class="text-sm text-slate-500">Cuando se registren citas aparecerán en esta lista.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- ============================== Modal: Reagendar ============================== -->
+@if (showRescheduleModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" (click)="closeRescheduleModal()">
+    <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">Reagendar cita</h3>
+        <button (click)="closeRescheduleModal()" class="text-slate-500 hover:text-slate-700">
+          <lucide-icon [img]="closeIcon" [size]="20"></lucide-icon>
+        </button>
+      </div>
+      <p class="mb-4 text-sm text-slate-600">
+        Cita actual:
+        <span class="font-medium">
+          {{ modalAppointment()?.scheduled_at | date: 'short' }}
+        </span>
+        - {{ modalAppointment()?.service_name }}
+      </p>
+      <label class="form-label">Nueva fecha y hora</label>
+      <input
+        type="datetime-local"
+        [ngModel]="newDate()"
+        (ngModelChange)="newDate.set($event)"
+        class="form-input"
+      />
+      @if (modalError()) {
+        <p class="mt-2 text-sm text-red-600">{{ modalError() }}</p>
+      }
+      <div class="mt-4 flex justify-end gap-2">
+        <button (click)="closeRescheduleModal()" class="btn-outline">Cancelar</button>
+        <button (click)="confirmReschedule()" class="btn-primary" [disabled]="modalLoading()">
+          {{ modalLoading() ? 'Guardando...' : 'Reagendar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============================== Modal: Ver detalle de cita completada ============================== -->
+@if (showDetailModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" (click)="closeDetailModal()">
+    <div class="card w-full max-w-2xl" (click)="$event.stopPropagation()">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">Detalle del servicio realizado</h3>
+        <button (click)="closeDetailModal()" class="text-slate-500 hover:text-slate-700">
+          <lucide-icon [img]="closeIcon" [size]="20"></lucide-icon>
+        </button>
+      </div>
+
+      @if (detailLoading()) {
+        <p class="text-sm text-slate-500">Cargando...</p>
+      } @else if (detailError()) {
+        <p class="text-sm text-red-600">{{ detailError() }}</p>
+      } @else {
+        @if (detailWorkOrder(); as wo) {
+          <div class="space-y-4">
+            <!-- Datos generales -->
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">Servicio</p>
+                <p class="font-medium text-slate-800">{{ wo.service_name || '—' }}</p>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">Vehículo</p>
+                <p class="font-mono text-sm text-slate-800">{{ wo.vehicle_plate || '—' }}</p>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">Mecánico responsable</p>
+                <p class="font-medium text-slate-800">{{ wo.mechanic_name || '—' }}</p>
+              </div>
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">Cerrada el</p>
+                <p class="font-medium text-slate-800">
+                  {{ wo.closed_at ? (wo.closed_at | date: 'short') : '—' }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Diagnóstico -->
+            <div>
+              <p class="text-xs uppercase tracking-wide text-slate-500">Diagnóstico</p>
+              <p class="mt-1 whitespace-pre-line rounded-lg bg-slate-50 p-3 text-sm text-slate-700">
+                {{ wo.diagnosis || 'Sin diagnóstico registrado.' }}
+              </p>
+            </div>
+
+            <!-- Trabajos / repuestos realizados -->
+            <div>
+              <p class="text-xs uppercase tracking-wide text-slate-500">Trabajos y repuestos</p>
+              @if (wo.items.length === 0) {
+                <p class="mt-1 text-sm text-slate-500">No se registraron trabajos adicionales.</p>
+              } @else {
+                <table class="mt-2 w-full text-sm">
+                  <thead class="text-left text-slate-500">
+                    <tr>
+                      <th class="py-1">Descripción</th>
+                      <th class="py-1 text-center">Cant.</th>
+                      <th class="py-1 text-right">Precio</th>
+                      <th class="py-1 text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (item of wo.items; track item.id) {
+                      <tr class="border-t border-slate-100">
+                        <td class="py-1.5">{{ item.description }}</td>
+                        <td class="py-1.5 text-center">{{ item.quantity }}</td>
+                        <td class="py-1.5 text-right">S/ {{ item.unit_price | number: '1.2-2' }}</td>
+                        <td class="py-1.5 text-right">S/ {{ item.quantity * item.unit_price | number: '1.2-2' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+
+            <!-- Fotos del auto (entrada/salida) -->
+            @if (wo.photos && wo.photos.length > 0) {
+              <div>
+                <p class="text-xs uppercase tracking-wide text-slate-500">Fotos del auto</p>
+                <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  @for (photo of wo.photos; track photo.id) {
+                    <div class="overflow-hidden rounded-lg border border-slate-200">
+                      <a [href]="photo.url_foto" target="_blank">
+                        <img
+                          [src]="photo.url_foto"
+                          [alt]="photo.descripcion || 'Foto del servicio'"
+                          class="h-24 w-full object-cover transition hover:opacity-90"
+                        />
+                      </a>
+                      <div class="px-2 py-1">
+                        <span class="text-[10px] font-semibold uppercase"
+                              [class.text-sky-700]="photo.tipo === 'entrada'"
+                              [class.text-emerald-700]="photo.tipo === 'salida'"
+                              [class.text-slate-500]="photo.tipo !== 'entrada' && photo.tipo !== 'salida'">
+                          {{ photo.tipo === 'entrada' ? 'Entrada' : photo.tipo === 'salida' ? 'Salida' : 'General' }}
+                        </span>
+                        @if (photo.descripcion) {
+                          <p class="text-[10px] text-slate-600 line-clamp-1">{{ photo.descripcion }}</p>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Total -->
+            <div class="flex items-center justify-between rounded-lg bg-mint-50 p-3">
+              <span class="text-sm font-medium text-slate-700">Total pagado</span>
+              <span class="text-lg font-bold text-mint-700">S/ {{ wo.total_amount | number: '1.2-2' }}</span>
+            </div>
+          </div>
+        }
+      }
+
+      <div class="mt-4 flex justify-end">
+        <button (click)="closeDetailModal()" class="btn-outline">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ============================== Modal: Asignar mecánico ============================== -->
+@if (showAssignModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" (click)="closeAssignModal()">
+    <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">Asignar mecánico</h3>
+        <button (click)="closeAssignModal()" class="text-slate-500 hover:text-slate-700">
+          <lucide-icon [img]="closeIcon" [size]="20"></lucide-icon>
+        </button>
+      </div>
+      <p class="mb-1 text-sm text-slate-600">
+        Servicio: <span class="font-medium">{{ modalAppointment()?.service_name }}</span>
+      </p>
+      @if (modalAppointment()?.service_category) {
+        <p class="mb-4 text-xs text-slate-500">
+          Categoría requerida: <span class="font-medium text-slate-700">{{ modalAppointment()?.service_category }}</span>
+        </p>
+      }
+      <label class="form-label">Mecánico</label>
+      @if (mechanics().length === 0) {
+        <p class="rounded-lg bg-amber-50 p-3 text-sm text-amber-700">
+          No hay mecánicos disponibles con la especialidad
+          <span class="font-semibold">{{ modalAppointment()?.service_category }}</span>.
+          Registra uno desde "Usuarios" antes de asignar.
+        </p>
+      } @else {
+        <select
+          [ngModel]="selectedMechanic()"
+          (ngModelChange)="selectedMechanic.set($event)"
+          class="form-input"
+        >
+          <option [ngValue]="0" disabled>-- Seleccione un mecánico --</option>
+          @for (mech of mechanics(); track mech.id) {
+            <option [ngValue]="mech.id">
+              {{ mech.first_name }} {{ mech.last_name }}
+              @if (mech.specialty) { <span>({{ mech.specialty }})</span> }
+            </option>
+          }
+        </select>
+        <p class="mt-2 text-xs text-slate-500">
+          Solo se muestran mecánicos cuya especialidad coincide con la categoría del servicio (RN-12).
+        </p>
+      }
+      @if (modalError()) {
+        <p class="mt-2 text-sm text-red-600">{{ modalError() }}</p>
+      }
+      <div class="mt-4 flex justify-end gap-2">
+        <button (click)="closeAssignModal()" class="btn-outline">Cancelar</button>
+        <button (click)="confirmAssignMechanic()" class="btn-primary" [disabled]="modalLoading()">
+          {{ modalLoading() ? 'Asignando...' : 'Asignar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

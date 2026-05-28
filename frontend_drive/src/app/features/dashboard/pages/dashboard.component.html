@@ -1,0 +1,195 @@
+<!-- =============================================================================
+     Plantilla del Dashboard principal
+     -----------------------------------------------------------------------------
+     Estructura:
+       1. Encabezado con saludo + boton de "Nueva cita" (solo cliente)
+       2. Tarjetas de estadisticas (solo admin)
+       3. Graficos: Top servicios + Citas por dia + Estado de citas (solo admin)
+       4. Tabla de proximas citas (todos)
+============================================================================= -->
+<div class="space-y-6">
+
+  <!-- ====================== 1. Encabezado y accion rapida ====================== -->
+  <div class="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-800">Resumen general</h2>
+      <p class="text-sm text-slate-500">
+        Hola {{ authService.currentUser()?.first_name }}, este es tu panel de control.
+      </p>
+    </div>
+    @if (authService.isClient()) {
+      <a routerLink="/app/appointments/new" class="btn-primary">
+        <lucide-icon [img]="plusIcon" [size]="18"></lucide-icon>
+        Nueva cita
+      </a>
+    }
+  </div>
+
+  <!-- ====================== 2. Tarjetas de estadisticas (admin) ====================== -->
+  @if (authService.isAdmin() && summary()) {
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+
+      <!-- Tarjeta: Total de citas -->
+      <div class="card flex items-center gap-4 hover:shadow-md transition">
+        <div class="rounded-xl bg-mint-100 p-3 text-mint-700">
+          <lucide-icon [img]="calendarCheckIcon" [size]="22"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs uppercase text-slate-500">Citas totales</p>
+          <p class="text-2xl font-bold text-slate-800">{{ summary()?.total_appointments }}</p>
+        </div>
+      </div>
+
+      <!-- Tarjeta: Citas pendientes -->
+      <div class="card flex items-center gap-4 hover:shadow-md transition">
+        <div class="rounded-xl bg-amber-100 p-3 text-amber-700">
+          <lucide-icon [img]="calendarIcon" [size]="22"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs uppercase text-slate-500">Pendientes</p>
+          <p class="text-2xl font-bold text-slate-800">{{ summary()?.pending_appointments }}</p>
+        </div>
+      </div>
+
+      <!-- Tarjeta: Clientes activos -->
+      <div class="card flex items-center gap-4 hover:shadow-md transition">
+        <div class="rounded-xl bg-sage-100 p-3 text-sage-700">
+          <lucide-icon [img]="usersIcon" [size]="22"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs uppercase text-slate-500">Clientes activos</p>
+          <p class="text-2xl font-bold text-slate-800">{{ summary()?.total_clients }}</p>
+        </div>
+      </div>
+
+      <!-- Tarjeta: Ingresos de la semana -->
+      <div class="card flex items-center gap-4 hover:shadow-md transition">
+        <div class="rounded-xl bg-mint-100 p-3 text-mint-700">
+          <lucide-icon [img]="trendingIcon" [size]="22"></lucide-icon>
+        </div>
+        <div>
+          <p class="text-xs uppercase text-slate-500">Ingresos semana</p>
+          <p class="text-2xl font-bold text-slate-800">
+            S/ {{ summary()?.weekly_income | number: '1.2-2' }}
+          </p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ====================== 3. Graficos visuales (admin) ====================== -->
+  @if (authService.isAdmin() && summary()) {
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+
+      <!-- Grafico de linea: Citas por dia ultimos 7 dias -->
+      <div class="card lg:col-span-2">
+        <div class="mb-4 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="rounded-lg bg-mint-100 p-2 text-mint-700">
+              <lucide-icon [img]="trendingIcon" [size]="18"></lucide-icon>
+            </div>
+            <h3 class="text-base font-semibold text-slate-800">Citas de los ultimos 7 dias</h3>
+          </div>
+          <span class="text-xs text-slate-500">RF-31</span>
+        </div>
+        <div class="h-72">
+          <canvas baseChart
+            [data]="appointmentsChart()"
+            [options]="lineOptions"
+            type="line">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Grafico de dona: estado de citas -->
+      <div class="card">
+        <div class="mb-4 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="rounded-lg bg-mint-100 p-2 text-mint-700">
+              <lucide-icon [img]="pieChartIcon" [size]="18"></lucide-icon>
+            </div>
+            <h3 class="text-base font-semibold text-slate-800">Estado de citas</h3>
+          </div>
+        </div>
+        <div class="h-72">
+          <canvas baseChart
+            [data]="appointmentStatusChart()"
+            [options]="doughnutOptions"
+            type="doughnut">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Grafico de barras: Top servicios mas solicitados -->
+      <div class="card lg:col-span-3">
+        <div class="mb-4 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="rounded-lg bg-mint-100 p-2 text-mint-700">
+              <lucide-icon [img]="barChartIcon" [size]="18"></lucide-icon>
+            </div>
+            <h3 class="text-base font-semibold text-slate-800">Servicios mas solicitados</h3>
+          </div>
+          <span class="text-xs text-slate-500">RF-32</span>
+        </div>
+        @if (topServices().length === 0) {
+          <p class="py-12 text-center text-sm text-slate-500">
+            Aun no hay datos suficientes para mostrar el ranking.
+          </p>
+        } @else {
+          <div class="h-64">
+            <canvas baseChart
+              [data]="topServicesChart()"
+              [options]="barOptions"
+              type="bar">
+            </canvas>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ====================== 4. Listado de proximas citas ====================== -->
+  <div class="card">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-slate-800">Proximas citas</h3>
+      <a routerLink="/app/appointments" class="text-sm font-medium text-mint-700 hover:text-mint-800">
+        Ver todas
+      </a>
+    </div>
+
+    @if (upcomingAppointments().length === 0) {
+      <div class="py-12 text-center">
+        <p class="text-sm text-slate-500">No hay citas programadas por el momento.</p>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="table-base">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Servicio</th>
+              <th>Vehículo</th>
+              <th>Cliente</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (appointment of upcomingAppointments(); track appointment.id) {
+              <tr>
+                <td>{{ appointment.scheduled_at | date: 'short' }}</td>
+                <td>{{ appointment.service_name }}</td>
+                <td>{{ appointment.vehicle_plate }}</td>
+                <td>{{ appointment.client_name }}</td>
+                <td>
+                  <span class="badge {{ getStatusClass(appointment.status) }}">
+                    {{ getStatusLabel(appointment.status) }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

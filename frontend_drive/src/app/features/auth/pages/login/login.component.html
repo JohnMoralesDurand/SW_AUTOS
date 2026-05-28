@@ -1,0 +1,77 @@
+<!-- Plantilla del componente de inicio de sesion -->
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-mint-100 via-mint-50 to-sage-100 px-4">
+  <div class="w-full max-w-md">
+    <!-- Encabezado con marca y enlace al inicio -->
+    <a routerLink="/" class="mb-8 flex flex-col items-center text-center">
+      <div class="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-mint-500 text-white shadow-soft">
+        <lucide-icon [img]="wrenchIcon" [size]="28"></lucide-icon>
+      </div>
+      <h1 class="text-3xl font-bold text-mint-800">AutoServ</h1>
+      <p class="text-sm text-slate-600">Sistema de Gestión de Taller Mecánico</p>
+    </a>
+
+    <!-- Tarjeta del formulario -->
+    <div class="card">
+      <h2 class="mb-1 text-xl font-semibold text-slate-800">Iniciar sesión</h2>
+      <p class="mb-6 text-sm text-slate-500">Ingrese sus credenciales para continuar.</p>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+        <div>
+          <label class="form-label">Correo electrónico</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-mint-500">
+              <lucide-icon [img]="mailIcon" [size]="18"></lucide-icon>
+            </span>
+            <input
+              type="email"
+              formControlName="email"
+              placeholder="ejemplo@correo.com"
+              class="form-input pl-10"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="form-label">Contraseña</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-mint-500">
+              <lucide-icon [img]="lockIcon" [size]="18"></lucide-icon>
+            </span>
+            <input
+              type="password"
+              formControlName="password"
+              placeholder="********"
+              class="form-input pl-10"
+            />
+          </div>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <button
+          type="submit"
+          class="btn-primary w-full"
+          [disabled]="form.invalid || loading()"
+        >
+          <lucide-icon [img]="loginIcon" [size]="18"></lucide-icon>
+          {{ loading() ? 'Ingresando...' : 'Ingresar' }}
+        </button>
+      </form>
+
+      <p class="mt-6 text-center text-sm text-slate-600">
+        ¿No tiene cuenta?
+        <a routerLink="/register" class="font-semibold text-mint-700 hover:text-mint-800">
+          Regístrese aquí
+        </a>
+      </p>
+    </div>
+
+    <p class="mt-6 text-center text-xs text-slate-500">
+      &copy; AutoServ - Proyecto académico
+    </p>
+  </div>
+</div>

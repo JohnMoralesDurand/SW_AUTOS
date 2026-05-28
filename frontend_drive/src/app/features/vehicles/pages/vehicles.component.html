@@ -1,0 +1,177 @@
+<!-- Plantilla del feature de vehículos -->
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-slate-800">Vehículos</h2>
+      <p class="text-sm text-slate-500">Administre los vehículos asociados a su cuenta.</p>
+    </div>
+    @if (!authService.isAdmin()) {
+      <button (click)="openCreateForm()" class="btn-primary">
+        <lucide-icon [img]="plusIcon" [size]="18"></lucide-icon>
+        Nuevo vehículo
+      </button>
+    }
+  </div>
+
+  <!-- Formulario crear/editar -->
+  @if (showForm()) {
+    <div class="card">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-slate-800">
+          {{ editingId() ? 'Editar vehículo' : 'Registrar nuevo vehículo' }}
+        </h3>
+        <button (click)="closeForm()" class="text-slate-500 hover:text-slate-700" aria-label="Cerrar">
+          <lucide-icon [img]="closeIcon" [size]="20"></lucide-icon>
+        </button>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid grid-cols-1 gap-4 md:grid-cols-3" novalidate>
+        <!-- Placa (sólo se edita en creación) -->
+        <div>
+          <label class="form-label">Placa <span class="text-red-500">*</span></label>
+          <input
+            type="text"
+            formControlName="license_plate"
+            placeholder="ABC-123"
+            class="form-input uppercase disabled:bg-slate-100 disabled:text-slate-500"
+            (input)="onPlateInput($event)"
+            maxlength="7"
+            [class.border-red-300]="fieldHasError('license_plate')"
+          />
+          @if (fieldHasError('license_plate')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('license_plate') }}</p>
+          } @else if (editingId()) {
+            <p class="mt-1 text-xs text-slate-400">La placa no puede modificarse después del registro.</p>
+          } @else {
+            <p class="mt-1 text-xs text-slate-400">Formato peruano: 3 letras o números, guión y 3 dígitos.</p>
+          }
+        </div>
+
+        <!-- Marca -->
+        <div>
+          <label class="form-label">Marca <span class="text-red-500">*</span></label>
+          <input
+            type="text"
+            formControlName="brand"
+            placeholder="Toyota"
+            class="form-input"
+            [class.border-red-300]="fieldHasError('brand')"
+          />
+          @if (fieldHasError('brand')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('brand') }}</p>
+          }
+        </div>
+
+        <!-- Modelo -->
+        <div>
+          <label class="form-label">Modelo <span class="text-red-500">*</span></label>
+          <input
+            type="text"
+            formControlName="model"
+            placeholder="Yaris"
+            class="form-input"
+            [class.border-red-300]="fieldHasError('model')"
+          />
+          @if (fieldHasError('model')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('model') }}</p>
+          }
+        </div>
+
+        <!-- Año -->
+        <div>
+          <label class="form-label">Año <span class="text-red-500">*</span></label>
+          <input
+            type="number"
+            formControlName="year"
+            class="form-input"
+            min="1950"
+            [max]="currentYear + 1"
+            [class.border-red-300]="fieldHasError('year')"
+          />
+          @if (fieldHasError('year')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('year') }}</p>
+          }
+        </div>
+
+        <!-- Kilometraje -->
+        <div>
+          <label class="form-label">Kilometraje <span class="text-red-500">*</span></label>
+          <input
+            type="number"
+            formControlName="mileage"
+            class="form-input"
+            min="0"
+            [class.border-red-300]="fieldHasError('mileage')"
+          />
+          @if (fieldHasError('mileage')) {
+            <p class="mt-1 text-xs text-red-600">{{ fieldError('mileage') }}</p>
+          }
+        </div>
+
+        <!-- Color -->
+        <div>
+          <label class="form-label">Color</label>
+          <input type="text" formControlName="color" placeholder="Rojo" class="form-input" />
+        </div>
+
+        @if (errorMessage()) {
+          <div class="md:col-span-3 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+            <lucide-icon [img]="alertIcon" [size]="16"></lucide-icon>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        }
+
+        <div class="md:col-span-3 flex justify-end gap-2">
+          <button type="button" (click)="closeForm()" class="btn-outline">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="loading()">
+            {{ loading() ? 'Guardando...' : (editingId() ? 'Guardar cambios' : 'Registrar') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- Listado de vehículos -->
+  @if (vehicles().length === 0) {
+    <div class="card flex flex-col items-center py-16">
+      <div class="rounded-2xl bg-mint-100 p-4 text-mint-600">
+        <lucide-icon [img]="carIcon" [size]="32"></lucide-icon>
+      </div>
+      <p class="mt-3 text-base font-semibold text-slate-700">No tiene vehículos registrados</p>
+      <p class="text-sm text-slate-500">Registre su primer vehículo para reservar citas.</p>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      @for (vehicle of vehicles(); track vehicle.id) {
+        <div class="card flex flex-col">
+          <div class="mb-3 flex items-center justify-between">
+            <div class="rounded-xl bg-mint-100 p-2 text-mint-700">
+              <lucide-icon [img]="carIcon" [size]="22"></lucide-icon>
+            </div>
+            @if (!authService.isAdmin()) {
+              <div class="flex items-center gap-1">
+                <button (click)="openEditForm(vehicle)" class="rounded-lg p-1.5 text-mint-700 hover:bg-mint-50" aria-label="Editar vehículo">
+                  <lucide-icon [img]="editIcon" [size]="18"></lucide-icon>
+                </button>
+                <button (click)="onDelete(vehicle)" class="rounded-lg p-1.5 text-red-500 hover:bg-red-50" aria-label="Eliminar vehículo">
+                  <lucide-icon [img]="trashIcon" [size]="18"></lucide-icon>
+                </button>
+              </div>
+            }
+          </div>
+          <p class="text-lg font-bold text-slate-800">{{ vehicle.license_plate }}</p>
+          <p class="text-sm text-slate-600">{{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.year }})</p>
+          <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+            <span>{{ vehicle.mileage | number }} km</span>
+            @if (vehicle.color) {
+              <span>{{ vehicle.color }}</span>
+            }
+          </div>
+          <a [routerLink]="['/app/vehicles', vehicle.id, 'history']" class="btn-outline mt-4 w-full text-xs">
+            Ver historial y mantenimiento
+          </a>
+        </div>
+      }
+    </div>
+  }
+</div>

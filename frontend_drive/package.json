@@ -1,0 +1,42 @@
+{
+  "name": "autoserv-frontend",
+  "version": "1.0.0",
+  "description": "Sistema de Gestion de Taller Mecanico - Frontend Angular",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^17.3.0",
+    "@angular/common": "^17.3.0",
+    "@angular/compiler": "^17.3.0",
+    "@angular/core": "^17.3.0",
+    "@angular/forms": "^17.3.0",
+    "@angular/platform-browser": "^17.3.0",
+    "@angular/platform-browser-dynamic": "^17.3.0",
+    "@angular/router": "^17.3.0",
+    "chart.js": "^4.5.1",
+    "esbuild": "^0.28.0",
+    "lucide-angular": "^0.344.0",
+    "ng2-charts": "^6.0.1",
+    "primeicons": "^7.0.0",
+    "primeng": "^17.18.15",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0",
+    "zod": "^3.22.4",
+    "zone.js": "~0.14.3"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^17.3.0",
+    "@angular/cli": "^17.3.0",
+    "@angular/compiler-cli": "^17.3.0",
+    "@types/node": "^18.18.0",
+    "autoprefixer": "^10.4.18",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "typescript": "~5.4.2"
+  }
+}

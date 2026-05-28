@@ -1,0 +1,129 @@
+<!-- Plantilla del layout principal de la aplicacion -->
+<div class="flex min-h-screen bg-mint-50">
+  <!-- Barra lateral de navegacion -->
+  <aside class="hidden md:flex md:w-64 flex-col bg-white border-r border-mint-100 shadow-soft">
+    <!-- Logo -->
+    <div class="px-6 py-5 border-b border-mint-100 flex items-center gap-3">
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-mint-500 text-white">
+        <lucide-icon [img]="wrenchIcon" [size]="22"></lucide-icon>
+      </div>
+      <div>
+        <p class="text-lg font-bold text-mint-800 leading-tight">AutoServ</p>
+        <p class="text-xs text-slate-500">Taller mecánico</p>
+      </div>
+    </div>
+
+    <!-- Items de navegacion -->
+    <nav class="flex-1 px-3 py-4 space-y-1">
+      @for (item of visibleItems(); track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="bg-mint-100 text-mint-800 font-semibold"
+          [routerLinkActiveOptions]="{ exact: false }"
+          class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-600 transition hover:bg-mint-50"
+        >
+          <lucide-icon [img]="item.icon" [size]="18"></lucide-icon>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <!-- Pie con datos del usuario y cierre de sesión -->
+    <div class="border-t border-mint-100 p-4">
+      <div class="mb-3 rounded-xl bg-mint-50 px-3 py-2">
+        <p class="text-sm font-semibold text-mint-800">
+          {{ authService.currentUser()?.first_name }} {{ authService.currentUser()?.last_name }}
+        </p>
+        <p class="text-xs text-slate-500 capitalize">{{ authService.currentUser()?.role }}</p>
+      </div>
+      <button (click)="onLogout()" class="btn-outline w-full">
+        <lucide-icon [img]="logoutIcon" [size]="18"></lucide-icon>
+        Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- Contenido principal -->
+  <div class="flex-1 flex flex-col">
+    <!-- Encabezado superior -->
+    <header class="bg-white border-b border-mint-100 px-6 py-4 flex items-center justify-between">
+      <div>
+        <h1 class="text-lg font-semibold text-slate-800">Panel de control</h1>
+        <p class="text-xs text-slate-500">Bienvenido, {{ authService.currentUser()?.first_name }}</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- Badge con el rol del usuario -->
+        <span class="badge badge-info capitalize hidden md:inline-flex">
+          {{ authService.currentUser()?.role }}
+        </span>
+
+        <!-- Boton de cerrar sesion (siempre visible en el header) -->
+        <button
+          (click)="onLogout()"
+          class="flex items-center gap-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-100"
+          title="Cerrar sesión"
+        >
+          <lucide-icon [img]="logoutIcon" [size]="16"></lucide-icon>
+          <span class="hidden sm:inline">Cerrar sesión</span>
+        </button>
+
+        <!-- Campana de notificaciones con dropdown -->
+        <div class="relative">
+          <button
+            (click)="toggleNotifications()"
+            class="relative rounded-full bg-mint-100 p-2 text-mint-700 hover:bg-mint-200"
+            title="Notificaciones"
+          >
+            <lucide-icon [img]="bellIcon" [size]="18"></lucide-icon>
+            @if (notificationService.unreadCount() > 0) {
+              <span class="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-xs font-bold text-white">
+                {{ notificationService.unreadCount() }}
+              </span>
+            }
+          </button>
+
+          @if (notificationsOpen()) {
+            <!-- Backdrop invisible para cerrar al click fuera -->
+            <div class="fixed inset-0 z-40" (click)="toggleNotifications()"></div>
+
+            <div class="absolute right-0 top-12 z-50 w-80 rounded-2xl border border-mint-100 bg-white shadow-soft md:w-96">
+              <div class="border-b border-mint-100 px-4 py-3">
+                <p class="text-sm font-semibold text-slate-800">Notificaciones</p>
+                <p class="text-xs text-slate-500">
+                  {{ notificationService.unreadCount() }} sin leer
+                </p>
+              </div>
+              <div class="max-h-96 overflow-y-auto">
+                @if (notificationService.notifications().length === 0) {
+                  <p class="p-6 text-center text-sm text-slate-500">No hay notificaciones aún.</p>
+                } @else {
+                  @for (notif of notificationService.notifications(); track notif.id) {
+                    <button
+                      (click)="markRead(notif)"
+                      class="w-full text-left border-b border-mint-50 px-4 py-3 transition hover:bg-mint-50 last:border-0"
+                      [class.bg-mint-50]="!notif.is_read"
+                    >
+                      <div class="flex items-start justify-between gap-2">
+                        <p class="text-sm font-semibold text-slate-800">{{ notif.title }}</p>
+                        @if (!notif.is_read) {
+                          <span class="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-mint-500"></span>
+                        }
+                      </div>
+                      <p class="mt-1 text-xs text-slate-600">{{ notif.message }}</p>
+                      <p class="mt-1 text-xs text-slate-400">{{ notif.created_at | date: 'short' }}</p>
+                    </button>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <!-- Area de contenido del feature actual -->
+    <main class="flex-1 p-6 overflow-auto">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>
