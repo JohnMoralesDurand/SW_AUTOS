@@ -51,6 +51,9 @@ desktop.ini
 # --- Carpeta backend antigua (FastAPI - quedo bloqueada en Windows) ---
 RICARDO/backend/
 
+# --- Carpeta REFERENCIA (ejemplos del profesor, solo uso local) ---
+REFERENCIA/
+
 # --- Outputs de testing/cobertura ---
 coverage/
 .pytest_cache/
