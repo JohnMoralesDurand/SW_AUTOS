@@ -1,23 +1,14 @@
-// =============================================================================
-// Servicio de Autenticacion (AuthService) - RF-01, RF-02, RF-04, RF-05
-// -----------------------------------------------------------------------------
-// Responsabilidades:
-//   - Login: enviar credenciales al backend y recibir un token JWT.
-//   - Register: crear una nueva cuenta de cliente.
-//   - Logout: borrar la sesion y volver al login.
-//   - Mantener el estado del usuario actual usando signals (Angular 17).
-//   - Persistir el token en localStorage para que la sesion sobreviva al
-//     refrescar la pagina.
-//
-// Patrones aplicados:
-//   - signal()  -> estado reactivo del usuario (currentUser).
-//   - computed() -> derivados (isAuthenticated, isAdmin, etc.).
-//   - Zod         -> valida que la respuesta del API tenga el formato esperado
-//                    (defensa contra errores del backend o datos corruptos).
-//
-// Importante: el AuthInterceptor agrega automaticamente el token JWT a cada
-// peticion HTTP, asi este servicio no tiene que preocuparse por ello.
-// =============================================================================
+// AuthService.
+// Es la version "ampliada" del AuthService que vimos en LP1 (el que pedia
+// el token a /api/token/ y lo guardaba en localStorage). Aca hago lo mismo
+// pero ademas:
+//   - mantengo el usuario actual con un signal() para que el sidebar y los
+//     guards lo lean reactivamente,
+//   - tengo computed() para isAdmin / isClient / isMechanic,
+//   - valido la respuesta del backend con Zod por si llega algo raro.
+// El interceptor que esta en core/interceptors/auth.interceptor.ts es el
+// que mete el "Bearer <token>" en cada request, asi no tengo que repetirlo
+// en cada metodo.
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
@@ -28,7 +19,10 @@ import { TokenResponse, User, tokenResponseSchema } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  // mismo patron del profe: private apiUrl = '...' apuntando al backend
   private readonly apiUrl = `${environment.apiUrl}/auth`;
+  // las dos claves de localStorage donde se guarda la sesion (como el
+  // 'access' / 'refresh' del ejemplo de LP1)
   private readonly TOKEN_KEY = 'autoserv_token';
   private readonly USER_KEY = 'autoserv_user';
 

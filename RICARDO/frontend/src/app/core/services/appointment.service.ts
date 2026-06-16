@@ -1,18 +1,9 @@
-// =============================================================================
-// AppointmentService - Cliente HTTP del modulo de Citas
-// -----------------------------------------------------------------------------
-// Encapsula todas las llamadas al backend relacionadas a las citas:
-//   - Consultar disponibilidad de horarios (RF-17).
-//   - Reservar una nueva cita (RF-18, RN-04, RN-05, RN-07, RN-11).
-//   - Listar citas filtradas por estado (RF-22).
-//   - Confirmar (RF-19), cancelar (RF-20), reprogramar (RF-21).
-//   - Asignar un mecanico segun especialidad (RF-23, RN-12).
-//   - Iniciar la atencion (cambio de estado RN-09).
-//
-// Cada componente de pantalla solo invoca a estos metodos; toda la logica de
-// negocio reside en el backend, garantizando que las reglas se apliquen
-// uniformemente sin importar quien llame al API.
-// =============================================================================
+// AppointmentService.
+// Mismo patron del ApiService que vimos en clase: un @Injectable que recibe
+// HttpClient por DI y expone metodos que devuelven Observable<T>. La unica
+// diferencia es que separe los services por entidad (este es solo de Citas)
+// en vez de un solo ApiService gigante, porque mi proyecto tiene muchas
+// mas tablas que el ejemplo de Alumno.
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -26,8 +17,10 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
+  // URL del backend Django (igual al patron private apiUrl = '...' del profe)
   private readonly apiUrl = `${environment.apiUrl}/appointments`;
 
+  // Inyecto HttpClient por el constructor, igual que en el ejemplo de clase
   constructor(private http: HttpClient) {}
 
   /** Consulta los bloques horarios disponibles para una fecha (RF-17). */

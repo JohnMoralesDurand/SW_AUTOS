@@ -1,9 +1,8 @@
-# =============================================================================
-# Views de DRF para AutoServ
-# -----------------------------------------------------------------------------
-# Implementa toda la logica del API REST. Sigue la estructura del profesor
-# (ModelViewSet) pero agrega los endpoints custom con las reglas de negocio.
-# =============================================================================
+# Views del API.
+# Misma estructura del ejemplo del profe: cada entidad tiene un ViewSet que
+# hereda de viewsets.ModelViewSet (CRUD automatico). Cuando la logica de
+# negocio es mas complicada (validaciones de horario, cierre de orden, etc.)
+# agregamos acciones extras con el decorador @action.
 from datetime import datetime, time, timedelta
 
 from django.utils import timezone
@@ -85,9 +84,9 @@ class LoginView(APIView):
         })
 
 
-# =============================================================================
-# USERS
-# =============================================================================
+# ViewSet de Usuario.
+# Igual al patron AlumnoViewSet del profe: queryset + serializer_class y
+# DRF ya nos da list / retrieve / create / update / destroy gratis.
 class UserViewSet(viewsets.ModelViewSet):
     """CRUD de usuarios. Filtros por rol/especialidad (RF-07)."""
 
@@ -185,9 +184,7 @@ class VehicleViewSet(viewsets.ModelViewSet):
         return Response(VehicleSerializer(instance).data)
 
 
-# =============================================================================
-# SERVICES
-# =============================================================================
+# Servicios del taller. Mismo ModelViewSet de clase.
 class ServiceViewSet(viewsets.ModelViewSet):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer

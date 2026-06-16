@@ -1,9 +1,8 @@
-# =============================================================================
-# Serializers de Django REST Framework para AutoServ
-# -----------------------------------------------------------------------------
-# Cada serializer convierte instancias de modelos en JSON (y viceversa),
-# y valida los datos de entrada antes de guardarlos en la base de datos.
-# =============================================================================
+# Serializers DRF.
+# Mismo patron del profe: heredamos de serializers.ModelSerializer y en el
+# Meta indicamos el model + los fields. Para mostrar campos calculados o
+# enlazar FK usamos SerializerMethodField (igual que el truco que vimos en
+# clase con tipo_documento_id / tipo_documento_nombre).
 from rest_framework import serializers
 
 from .models import (
@@ -12,9 +11,8 @@ from .models import (
 )
 
 
-# =============================================================================
-# Usuario
-# =============================================================================
+# Serializer de Usuario (igual al patron AlumnoSerializer del profe).
+# Listo los fields a mano para no exponer el password_hash.
 class UserSerializer(serializers.ModelSerializer):
     """Representacion publica del usuario (sin contrasena)."""
 
@@ -24,6 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
             'id', 'first_name', 'last_name', 'dni', 'email', 'phone',
             'role', 'specialty', 'work_schedule', 'is_active', 'created_at',
         ]
+        # estos no se pueden cambiar desde el frontend
         read_only_fields = ['id', 'created_at']
 
 
@@ -70,13 +69,14 @@ class ServiceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# =============================================================================
-# Cita
-# =============================================================================
+# Serializer de Cita. Igual al truco que vimos con tipo_documento_nombre
+# del profe pero usando SerializerMethodField para varios campos a la vez:
+# en vez de devolver solo el ID de la FK, devuelvo tambien el nombre
+# para que el frontend no tenga que hacer otra consulta.
 class AppointmentSerializer(serializers.ModelSerializer):
     """Cita con datos enriquecidos para el frontend."""
 
-    # Campos calculados (read-only) para mostrar info legible
+    # Campos calculados (read-only) que arma el backend al serializar
     client_name = serializers.SerializerMethodField()
     vehicle_plate = serializers.SerializerMethodField()
     service_name = serializers.SerializerMethodField()

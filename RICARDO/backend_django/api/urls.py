@@ -1,15 +1,15 @@
-# =============================================================================
-# URLs del app api - sigue la estructura del profesor (router + include)
-# =============================================================================
+# Rutas del app "api".
+# Uso el DefaultRouter de DRF tal cual lo hicimos en clase:
+#   router = DefaultRouter()
+#   router.register('alumno', views.AlumnoViewSet)
+# Pero le paso trailing_slash='' para que las URLs queden sin barra al final,
+# que es lo que pide el frontend Angular que ya tenia.
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from . import views
 
 
-# Router automatico para los ViewSets.
-# trailing_slash='' hace que las URLs sean /api/users (sin slash final)
-# compatible con el frontend que ya esperaba ese formato del FastAPI.
 router = DefaultRouter(trailing_slash='')
 router.register('users', views.UserViewSet, basename='users')
 router.register('vehicles', views.VehicleViewSet, basename='vehicles')

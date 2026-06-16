@@ -1,15 +1,7 @@
-// =============================================================================
-// Componente del listado de citas (RF-15 a RF-23)
-// -----------------------------------------------------------------------------
-// Permite visualizar, filtrar y gestionar el ciclo de vida de las citas:
-//   - Confirmar una cita pendiente (RF-19).
-//   - Cancelar una cita con motivo (RF-20, RN-06).
-//   - Reagendar a otra fecha/hora (RF-21).
-//   - Asignar un mecánico según especialidad (RF-23, RN-12).
-//   - Iniciar la atención (RF-24, RN-09 estado secuencial).
-//
-// El backend (FastAPI) valida las reglas; el frontend solo muestra el resultado.
-// =============================================================================
+// Componente standalone de la pantalla "Citas".
+// Mismo patron del Alumnolista del profe: @Component con templateUrl,
+// la lista se llena en ngOnInit() llamando al service, y los botones
+// disparan metodos del componente que llaman al service y refrescan.
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -27,7 +19,9 @@ import {
   Eye,
 } from 'lucide-angular';
 
-// PrimeNG (siguiendo el patron del profesor)
+// PrimeNG: los mismos modulos que uso el profe en alumnolista.html
+// (p-table para listar y p-button para las acciones). El p-tag lo agrego
+// yo para mostrar el estado de la cita con color.
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -104,10 +98,16 @@ export class AppointmentsComponent implements OnInit {
     public authService: AuthService,
   ) {}
 
+  // ngOnInit se ejecuta cuando se crea el componente. Aca llamo a la
+  // funcion que llena la tabla con el subscribe (igual al patron del profe)
   ngOnInit(): void {
     this.loadAppointments();
   }
 
+  // Trae las citas del backend (le paso el filtro por estado si hay).
+  // El .subscribe() es lo mismo que .subscribe(lista => ...) del Alumnolista
+  // del profe, solo que aca uso la forma con { next: ... } por si despues
+  // quiero manejar el error.
   loadAppointments(): void {
     const status = this.statusFilter() || undefined;
     this.appointmentService.list(status as AppointmentStatus | undefined).subscribe({

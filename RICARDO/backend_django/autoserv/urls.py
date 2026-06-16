@@ -1,6 +1,6 @@
-# =============================================================================
-# URLs principales del proyecto AutoServ (Django)
-# =============================================================================
+# URLs principales del proyecto.
+# Mismo formato que el ejemplo del profe: incluyo el admin de Django y delego
+# todo el resto al urls.py del app "api" con un include().
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin

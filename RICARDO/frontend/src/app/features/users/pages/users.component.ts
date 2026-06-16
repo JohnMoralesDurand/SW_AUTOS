@@ -1,11 +1,8 @@
-// =============================================================================
-// Componente de Gestión de Usuarios (RF-05, RF-06, RF-07)
-// -----------------------------------------------------------------------------
-// Solo accesible para administradores. Permite:
-//   - Listar y filtrar usuarios por rol (cliente, mecánico, admin).
-//   - Registrar nuevos mecánicos (RF-05) con su especialidad y horario.
-//   - Activar/desactivar usuarios (RN-10 - eliminación lógica).
-// =============================================================================
+// Componente de Usuarios.
+// Es el CRUD mas parecido al ejemplo de Alumno del profe: una tabla con los
+// usuarios + un formulario para crear mecanicos + boton para activar/
+// desactivar. La logica esta toda en el UserService que llama al backend
+// Django, igual que el ApiService del profe.
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';

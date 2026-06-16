@@ -1,16 +1,14 @@
-# =============================================================================
-# Modelos ORM del sistema AutoServ (Django)
-# -----------------------------------------------------------------------------
-# Define las 9 entidades del dominio: Usuario, Vehiculo, Servicio, Cita,
-# OrdenTrabajo, ItemOrdenTrabajo, Notificacion, HorarioTaller y FotosServicio.
-# =============================================================================
+# Modelos del taller AutoServ.
+# Aca van todas las entidades del sistema. La estructura es la misma que vimos
+# en clase con el modelo de Alumno: heredar de models.Model y declarar campos
+# como models.CharField / IntegerField / DateField / ForeignKey, etc.
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import models
 
 
-# =============================================================================
-# Choices (enumeraciones)
-# =============================================================================
+# Enumeraciones (TextChoices de Django).
+# Sirven para listar de opciones fijas, parecido a un Enum normal pero
+# guarda el valor como texto en la BD.
 class UserRole(models.TextChoices):
     CLIENT = 'client', 'Cliente'
     MECHANIC = 'mechanic', 'Mecanico'
@@ -37,9 +35,8 @@ class NotificationType(models.TextChoices):
     SERVICE_COMPLETED = 'service_completed', 'Servicio completado'
 
 
-# =============================================================================
-# Entidades
-# =============================================================================
+# Usuario: misma logica que el modelo Alumno del profe (CharField, EmailField,
+# etc) pero con un campo extra "role" que distingue cliente, mecanico y admin.
 class User(models.Model):
     """Usuario del sistema: cliente, mecanico o administrador."""
 
@@ -49,9 +46,10 @@ class User(models.Model):
     email = models.EmailField(max_length=120, unique=True, db_index=True)
     phone = models.CharField(max_length=20, blank=True, null=True)
     password_hash = models.CharField(max_length=255)
+    # role usa el TextChoices de arriba para que solo se acepten valores validos
     role = models.CharField(max_length=20, choices=UserRole.choices, default=UserRole.CLIENT)
 
-    # Campos especificos para mecanicos
+    # Estos dos solo los usa el mecanico (vienen vacios para cliente/admin)
     specialty = models.CharField(max_length=80, blank=True, null=True)
     work_schedule = models.CharField(max_length=120, blank=True, null=True)
 
@@ -63,6 +61,7 @@ class User(models.Model):
         db_table = 'users'
         ordering = ['-created_at']
 
+    # __str__ igual que en clase para que se vea bonito en el admin
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
 
@@ -76,6 +75,9 @@ class User(models.Model):
         return check_password(raw_password, self.password_hash)
 
 
+# Vehiculo: ForeignKey al cliente dueño. Es la misma relacion que
+# Alumno -> TipoDocumentoIdentidad del ejemplo del profe pero al reves
+# (un cliente puede tener varios autos).
 class Vehicle(models.Model):
     """Vehiculo asociado a un cliente."""
 
@@ -120,6 +122,9 @@ class Service(models.Model):
         return self.name
 
 
+# Cita: la entidad mas importante del sistema. Tiene varios ForeignKey
+# (cliente, vehiculo, servicio y opcionalmente mecanico). Misma idea que
+# las FK de la clase del profe.
 class Appointment(models.Model):
     """Cita reservada por un cliente."""
 

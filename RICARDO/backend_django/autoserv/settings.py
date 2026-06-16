@@ -1,10 +1,15 @@
 """
 Settings de Django para el proyecto AutoServ.
 Backend del Sistema de Gestion de Taller Mecanico.
+
+La estructura sigue el ejemplo del profe (proyecto "inscripcion"): tenemos un
+solo app "api" donde van models/serializers/views/urls, mas la config de
+DRF + JWT + CORS para que se conecte con el frontend Angular.
 """
 from datetime import timedelta
 from pathlib import Path
 
+# BASE_DIR apunta a la carpeta del manage.py (igual al ejemplo del profe)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ---------------------------------------------------------------------------
@@ -19,11 +24,13 @@ ALLOWED_HOSTS = ['*']
 # Apps instaladas
 # ---------------------------------------------------------------------------
 INSTALLED_APPS = [
-    # Apps del proyecto
+    # Mi app principal (ahi van models, views, serializers, urls)
     'api',
-    # Apps de terceros
+    # DRF para los ViewSets que vimos en clase
     'rest_framework',
+    # JWT para el login (como el ejemplo de LP1 con TokenObtainPair)
     'rest_framework_simplejwt',
+    # CORS para que Angular en :4200 pueda llamar al backend en :8000
     'corsheaders',
     # Apps por defecto de Django
     'django.contrib.admin',
@@ -129,9 +136,10 @@ SIMPLE_JWT = {
 }
 
 
-# ---------------------------------------------------------------------------
-# CORS: permitir peticiones desde el frontend Angular en :4200
-# ---------------------------------------------------------------------------
+# CORS para conectar con el frontend.
+# Sin esto el navegador bloquea las llamadas desde Angular (localhost:4200)
+# al backend Django (localhost:8001). Es la misma config que tiene el profe
+# en el settings.py del ejemplo de DESARROLLO_WEB_2.0.
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:4200',
     'http://127.0.0.1:4200',

@@ -1,5 +1,7 @@
-// Rutas principales de la aplicacion
-// Se utiliza lazy loading para cargar cada feature solo cuando se necesita
+// Rutas de la app.
+// Mismo formato del profe (export const routes: Routes = [...]) pero uso
+// loadComponent para hacer lazy loading: cada pantalla se descarga solo
+// cuando se navega a ella, asi el bundle inicial pesa menos.
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
