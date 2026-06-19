@@ -1,7 +1,8 @@
 # Modelos del taller AutoServ.
-# Aca van todas las entidades del sistema. La estructura es la misma que vimos
-# en clase con el modelo de Alumno: heredar de models.Model y declarar campos
-# como models.CharField / IntegerField / DateField / ForeignKey, etc.
+# Aca defino todas las entidades del sistema. Cada clase hereda de
+# models.Model y declara sus campos con CharField, IntegerField, DateField,
+# ForeignKey, etc. Django se encarga de crear las tablas y hacer las
+# migraciones cuando uno corre makemigrations + migrate.
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import models
 
@@ -35,8 +36,10 @@ class NotificationType(models.TextChoices):
     SERVICE_COMPLETED = 'service_completed', 'Servicio completado'
 
 
-# Usuario: misma logica que el modelo Alumno del profe (CharField, EmailField,
-# etc) pero con un campo extra "role" que distingue cliente, mecanico y admin.
+# Usuario del sistema.
+# Tiene los datos basicos (nombre, dni, email, telefono, password) mas un
+# campo "role" que decide si es cliente, mecanico o admin. Los mecanicos
+# ademas guardan su especialidad y horario.
 class User(models.Model):
     """Usuario del sistema: cliente, mecanico o administrador."""
 
@@ -61,7 +64,7 @@ class User(models.Model):
         db_table = 'users'
         ordering = ['-created_at']
 
-    # __str__ igual que en clase para que se vea bonito en el admin
+    # __str__ para que se vea bonito en el panel admin de Django
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
 
@@ -75,9 +78,9 @@ class User(models.Model):
         return check_password(raw_password, self.password_hash)
 
 
-# Vehiculo: ForeignKey al cliente dueño. Es la misma relacion que
-# Alumno -> TipoDocumentoIdentidad del ejemplo del profe pero al reves
-# (un cliente puede tener varios autos).
+# Vehiculo: tiene una ForeignKey al usuario dueño. Un cliente puede tener
+# varios autos asi que la relacion es 1 a N. Si borro al cliente, sus autos
+# tambien se borran (CASCADE).
 class Vehicle(models.Model):
     """Vehiculo asociado a un cliente."""
 
@@ -122,9 +125,13 @@ class Service(models.Model):
         return self.name
 
 
-# Cita: la entidad mas importante del sistema. Tiene varios ForeignKey
-# (cliente, vehiculo, servicio y opcionalmente mecanico). Misma idea que
-# las FK de la clase del profe.
+# Cita: la entidad mas importante del sistema. Tiene varios ForeignKey:
+# - client: el cliente que reserva
+# - vehicle: su auto
+# - service: el servicio que pidio
+# - mechanic: el mecanico asignado (al inicio queda en null hasta que el
+#             admin lo asigne)
+# - dia_bloque: el bloque horario al que pertenece (para los reportes)
 class Appointment(models.Model):
     """Cita reservada por un cliente."""
 

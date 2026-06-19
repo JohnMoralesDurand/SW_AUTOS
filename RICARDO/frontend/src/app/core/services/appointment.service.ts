@@ -1,9 +1,14 @@
 // AppointmentService.
-// Mismo patron del ApiService que vimos en clase: un @Injectable que recibe
-// HttpClient por DI y expone metodos que devuelven Observable<T>. La unica
-// diferencia es que separe los services por entidad (este es solo de Citas)
-// en vez de un solo ApiService gigante, porque mi proyecto tiene muchas
-// mas tablas que el ejemplo de Alumno.
+// Encapsula todas las llamadas al backend relacionadas a las Citas:
+//   - getAvailability: consulta los horarios libres en una fecha.
+//   - book: reserva una cita nueva.
+//   - list: lista las citas filtradas por estado.
+//   - confirm / cancel / reschedule: cambian el estado de la cita.
+//   - assignMechanic: el admin asigna un mecanico segun especialidad.
+//   - start: pasa la cita a "en atencion" y crea la orden de trabajo.
+// Como tengo varias entidades distintas (vehiculos, servicios, ordenes,
+// usuarios, etc.) prefiero tener un service por cada una asi cada archivo
+// se queda corto y enfocado, en vez de un solo ApiService gigante.
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -17,10 +22,10 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentService {
-  // URL del backend Django (igual al patron private apiUrl = '...' del profe)
+  // URL base del recurso "citas" en el backend Django
   private readonly apiUrl = `${environment.apiUrl}/appointments`;
 
-  // Inyecto HttpClient por el constructor, igual que en el ejemplo de clase
+  // HttpClient se inyecta por el constructor (inyeccion de dependencias)
   constructor(private http: HttpClient) {}
 
   /** Consulta los bloques horarios disponibles para una fecha (RF-17). */

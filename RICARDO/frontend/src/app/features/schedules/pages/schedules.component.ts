@@ -1,10 +1,7 @@
-// =============================================================================
-// Componente "Horarios" (RF-04 admin)
-// -----------------------------------------------------------------------------
-// Permite al administrador configurar el horario de atención del taller para
-// cada día de la semana. Los cambios se reflejan inmediatamente en el módulo
-// de citas (validación de slots disponibles y reservas).
-// =============================================================================
+// Componente "Horarios".
+// Solo el admin puede modificar el horario del taller. Cambia el dia
+// (abierto/cerrado) y la hora de apertura/cierre. El cambio afecta la
+// validacion de slots de las citas inmediatamente.
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +13,13 @@ import {
   CheckCircle,
 } from 'lucide-angular';
 
+// PrimeNG: tabla con los 7 dias, botones de guardar e inputs de hora
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { TagModule } from 'primeng/tag';
+
 import {
   BusinessHours,
   ScheduleService,
@@ -25,7 +29,10 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
 @Component({
   selector: 'app-schedules',
   standalone: true,
-  imports: [CommonModule, FormsModule, LucideAngularModule],
+  imports: [
+    CommonModule, FormsModule, LucideAngularModule,
+    TableModule, ButtonModule, InputTextModule, InputSwitchModule, TagModule,
+  ],
   templateUrl: './schedules.component.html',
 })
 export class SchedulesComponent implements OnInit {

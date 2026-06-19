@@ -2,84 +2,86 @@
 <div class="space-y-6">
   <div>
     <h2 class="text-2xl font-bold text-slate-800">Reservar nueva cita</h2>
-    <p class="text-sm text-slate-500">Seleccione su vehículo, el servicio y un horario disponible.</p>
+    <p class="text-sm text-slate-500">Seleccione su vehiculo, el servicio y un horario disponible.</p>
   </div>
 
-  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid grid-cols-1 gap-6 lg:grid-cols-2" novalidate>
-    <!-- Columna izquierda: datos -->
+  <form [formGroup]="form" (ngSubmit)="onSubmit()"
+        class="grid grid-cols-1 gap-6 lg:grid-cols-2" novalidate>
+
+    <!-- Columna izquierda: datos de la reserva -->
     <div class="card space-y-4">
       <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
         <lucide-icon [img]="carIcon" [size]="20" class="text-mint-600"></lucide-icon>
         1. Datos de la reserva
       </h3>
 
-      <!-- Vehículo -->
-      <div>
-        <label class="form-label">Vehículo <span class="text-red-500">*</span></label>
-        <select
-          formControlName="vehicle_id"
-          class="form-input"
-          [class.border-red-300]="fieldHasError('vehicle_id')"
-        >
-          <option [value]="0" disabled>-- Seleccione un vehículo --</option>
-          @for (vehicle of vehicles(); track vehicle.id) {
-            <option [value]="vehicle.id">
-              {{ vehicle.license_plate }} - {{ vehicle.brand }} {{ vehicle.model }}
-            </option>
-          }
-        </select>
+      <!-- Vehiculo (p-dropdown de PrimeNG) -->
+      <div class="campo">
+        <label class="form-label">Vehiculo <span class="text-red-500">*</span></label>
+        <p-dropdown [options]="vehicles()" formControlName="vehicle_id"
+                    optionValue="id"
+                    optionLabel="license_plate"
+                    placeholder="-- Seleccione un vehiculo --"
+                    styleClass="w-full"
+                    [class.p-invalid]="fieldHasError('vehicle_id')">
+          <ng-template let-vehicle pTemplate="item">
+            {{ vehicle.license_plate }} - {{ vehicle.brand }} {{ vehicle.model }}
+          </ng-template>
+          <ng-template let-vehicle pTemplate="selectedItem">
+            {{ vehicle.license_plate }} - {{ vehicle.brand }} {{ vehicle.model }}
+          </ng-template>
+        </p-dropdown>
         @if (vehicles().length === 0) {
           <p class="mt-2 text-xs text-amber-600">
-            Debe registrar al menos un vehículo antes de reservar.
-            <a routerLink="/app/vehicles" class="font-semibold text-mint-700 underline">Ir a Vehículos</a>
+            Debe registrar al menos un vehiculo antes de reservar.
+            <a routerLink="/app/vehicles" class="font-semibold text-mint-700 underline">Ir a Vehiculos</a>
           </p>
         } @else if (fieldHasError('vehicle_id')) {
-          <p class="mt-1 text-xs text-red-600">Seleccione un vehículo.</p>
+          <p class="mt-1 text-xs text-red-600">Seleccione un vehiculo.</p>
         }
       </div>
 
-      <!-- Servicio -->
-      <div>
+      <!-- Servicio (p-dropdown) -->
+      <div class="campo">
         <label class="form-label">Servicio <span class="text-red-500">*</span></label>
-        <select
-          formControlName="service_id"
-          (change)="loadAvailability()"
-          class="form-input"
-          [class.border-red-300]="fieldHasError('service_id')"
-        >
-          <option [value]="0" disabled>-- Seleccione un servicio --</option>
-          @for (service of services(); track service.id) {
-            <option [value]="service.id">
-              {{ service.name }} - S/ {{ service.price | number: '1.2-2' }}
-            </option>
-          }
-        </select>
+        <p-dropdown [options]="services()" formControlName="service_id"
+                    optionValue="id"
+                    optionLabel="name"
+                    placeholder="-- Seleccione un servicio --"
+                    styleClass="w-full"
+                    (onChange)="loadAvailability()"
+                    [class.p-invalid]="fieldHasError('service_id')">
+          <ng-template let-service pTemplate="item">
+            {{ service.name }} - S/ {{ service.price | number: '1.2-2' }}
+          </ng-template>
+          <ng-template let-service pTemplate="selectedItem">
+            {{ service.name }} - S/ {{ service.price | number: '1.2-2' }}
+          </ng-template>
+        </p-dropdown>
         @if (fieldHasError('service_id')) {
           <p class="mt-1 text-xs text-red-600">Seleccione un servicio.</p>
         }
       </div>
 
-      <!-- Fecha -->
-      <div>
+      <!-- Fecha (input type date, mantengo el formato simple) -->
+      <div class="campo">
         <label class="form-label">Fecha <span class="text-red-500">*</span></label>
-        <input
-          type="date"
-          formControlName="date"
-          (change)="loadAvailability()"
-          class="form-input"
-          [min]="getMinDate()"
-          [class.border-red-300]="fieldHasError('date')"
-        />
+        <input type="date" pInputText formControlName="date"
+               class="w-full" [min]="getMinDate()"
+               (change)="loadAvailability()"
+               [class.p-invalid]="fieldHasError('date')"/>
       </div>
 
-      <!-- Notas -->
-      <div>
+      <!-- Notas opcionales -->
+      <div class="campo">
         <label class="form-label">Notas (opcional)</label>
-        <textarea formControlName="notes" rows="3" class="form-input" placeholder="Observaciones adicionales..."></textarea>
+        <textarea pInputText formControlName="notes" rows="3"
+                  class="w-full"
+                  placeholder="Observaciones adicionales..."></textarea>
       </div>
     </div>
 
-    <!-- Columna derecha: horarios -->
+    <!-- Columna derecha: horarios disponibles -->
     <div class="card space-y-4">
       <h3 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
         <lucide-icon [img]="clockIcon" [size]="20" class="text-mint-600"></lucide-icon>
@@ -101,21 +103,12 @@
       @if (slots().length > 0) {
         <div class="grid grid-cols-3 gap-2 md:grid-cols-4">
           @for (slot of slots(); track slot.start) {
-            <button
-              type="button"
-              (click)="selectSlot(slot)"
-              [disabled]="!slot.available"
-              [class.bg-mint-500]="form.value.selected_slot === slot.start"
-              [class.text-white]="form.value.selected_slot === slot.start"
-              [class.bg-mint-50]="slot.available && form.value.selected_slot !== slot.start"
-              [class.text-mint-700]="slot.available && form.value.selected_slot !== slot.start"
-              [class.bg-slate-100]="!slot.available"
-              [class.text-slate-400]="!slot.available"
-              [class.cursor-not-allowed]="!slot.available"
-              class="rounded-xl border border-mint-200 px-3 py-2 text-sm font-medium transition hover:bg-mint-100 disabled:hover:bg-slate-100"
-            >
-              {{ slot.start | date: 'shortTime' }}
-            </button>
+            <p-button [label]="(slot.start | date: 'shortTime') ?? ''"
+                      [severity]="form.value.selected_slot === slot.start ? 'info' : 'secondary'"
+                      [outlined]="form.value.selected_slot !== slot.start"
+                      [raised]="form.value.selected_slot === slot.start"
+                      [disabled]="!slot.available"
+                      (click)="selectSlot(slot)"/>
           }
         </div>
         @if (fieldHasError('selected_slot')) {
@@ -138,9 +131,9 @@
       }
 
       <div class="flex justify-end gap-2 pt-2">
-        <button type="submit" class="btn-primary" [disabled]="loading()">
-          {{ loading() ? 'Reservando...' : 'Confirmar reserva' }}
-        </button>
+        <p-button [label]="loading() ? 'Reservando...' : 'Confirmar reserva'"
+                  icon="pi pi-check" severity="info" [raised]="true"
+                  type="submit" [disabled]="loading()"/>
       </div>
     </div>
   </form>

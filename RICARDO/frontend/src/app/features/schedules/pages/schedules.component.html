@@ -1,22 +1,24 @@
 <!-- Plantilla del feature de horarios del taller -->
 <div class="space-y-6">
+
+  <!-- Cabecera -->
   <div class="flex items-center justify-between">
     <div>
       <h2 class="text-2xl font-bold text-slate-800">Horarios del taller</h2>
-      <p class="text-sm text-slate-500">Configure los días y horarios de atención. Afecta al cálculo de citas disponibles.</p>
+      <p class="text-sm text-slate-500">Configure los dias y horarios de atencion. Afecta al calculo de citas disponibles.</p>
     </div>
     <div class="rounded-xl bg-mint-100 p-3 text-mint-700">
       <lucide-icon [img]="clockIcon" [size]="22"></lucide-icon>
     </div>
   </div>
 
+  <!-- Mensajes de error / exito -->
   @if (errorMessage()) {
     <div class="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
       <lucide-icon [img]="alertIcon" [size]="16"></lucide-icon>
       <span>{{ errorMessage() }}</span>
     </div>
   }
-
   @if (successMessage()) {
     <div class="flex items-center gap-2 rounded-xl border border-mint-200 bg-mint-50 px-4 py-2 text-sm text-mint-700">
       <lucide-icon [img]="checkIcon" [size]="16"></lucide-icon>
@@ -24,66 +26,47 @@
     </div>
   }
 
-  <!-- Lista de días configurables -->
-  <div class="card divide-y divide-mint-100">
-    @for (day of schedule(); track day.id) {
-      <div class="grid grid-cols-1 gap-4 py-4 first:pt-0 last:pb-0 md:grid-cols-12 md:items-center">
-        <!-- Día -->
-        <div class="md:col-span-3">
-          <p class="font-semibold text-slate-800">{{ dayLabels[day.day_of_week] }}</p>
-          <p class="text-xs" [class.text-mint-700]="day.is_open" [class.text-slate-400]="!day.is_open">
-            {{ day.is_open ? 'Atendiendo' : 'Cerrado' }}
-          </p>
-        </div>
+  <!-- Tabla de dias configurables (p-table de PrimeNG) -->
+  <p-table [value]="schedule()" [tableStyle]="{ 'min-width': '50rem' }"
+           styleClass="p-datatable-sm">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Dia</th>
+        <th class="text-center">Estado</th>
+        <th class="text-center">Abierto</th>
+        <th>Apertura</th>
+        <th>Cierre</th>
+        <th class="text-right">Accion</th>
+      </tr>
+    </ng-template>
 
-        <!-- Toggle abierto/cerrado -->
-        <div class="md:col-span-2">
-          <label class="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              [(ngModel)]="day.is_open"
-              class="h-5 w-5 rounded border-mint-300 text-mint-600 focus:ring-mint-500"
-            />
-            <span class="text-sm text-slate-700">Abierto</span>
-          </label>
-        </div>
-
-        <!-- Hora apertura -->
-        <div class="md:col-span-2">
-          <label class="block text-xs text-slate-500">Apertura</label>
-          <input
-            type="time"
-            [(ngModel)]="day.open_time"
-            [disabled]="!day.is_open"
-            class="form-input disabled:bg-slate-100 disabled:text-slate-400"
-          />
-        </div>
-
-        <!-- Hora cierre -->
-        <div class="md:col-span-2">
-          <label class="block text-xs text-slate-500">Cierre</label>
-          <input
-            type="time"
-            [(ngModel)]="day.close_time"
-            [disabled]="!day.is_open"
-            class="form-input disabled:bg-slate-100 disabled:text-slate-400"
-          />
-        </div>
-
-        <!-- Botón guardar -->
-        <div class="md:col-span-3 md:text-right">
-          <button
-            (click)="saveDay(day)"
-            class="btn-primary"
-            [disabled]="savingDay() === day.day_of_week"
-          >
-            <lucide-icon [img]="saveIcon" [size]="16"></lucide-icon>
-            {{ savingDay() === day.day_of_week ? 'Guardando...' : 'Guardar' }}
-          </button>
-        </div>
-      </div>
-    }
-  </div>
+    <ng-template pTemplate="body" let-day>
+      <tr>
+        <td class="font-semibold">{{ dayLabels[day.day_of_week] }}</td>
+        <td class="text-center">
+          <p-tag [value]="day.is_open ? 'Atendiendo' : 'Cerrado'"
+                 [severity]="day.is_open ? 'success' : 'danger'"/>
+        </td>
+        <td class="text-center">
+          <p-inputSwitch [(ngModel)]="day.is_open"/>
+        </td>
+        <td>
+          <input type="time" pInputText [(ngModel)]="day.open_time"
+                 [disabled]="!day.is_open" class="w-full"/>
+        </td>
+        <td>
+          <input type="time" pInputText [(ngModel)]="day.close_time"
+                 [disabled]="!day.is_open" class="w-full"/>
+        </td>
+        <td class="text-right">
+          <p-button [label]="savingDay() === day.day_of_week ? 'Guardando...' : 'Guardar'"
+                    icon="pi pi-save" severity="info" [raised]="true"
+                    [disabled]="savingDay() === day.day_of_week"
+                    (click)="saveDay(day)"/>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 
   <p class="text-xs text-slate-500">
     <strong>Nota:</strong> Los cambios afectan inmediatamente a las nuevas reservas.

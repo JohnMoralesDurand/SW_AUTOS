@@ -1,7 +1,8 @@
 // Rutas de la app.
-// Mismo formato del profe (export const routes: Routes = [...]) pero uso
-// loadComponent para hacer lazy loading: cada pantalla se descarga solo
-// cuando se navega a ella, asi el bundle inicial pesa menos.
+// Defino el array de rutas con loadComponent en cada una para hacer lazy
+// loading: cada pantalla queda en su propio chunk y solo se descarga
+// cuando el usuario navega ahi. Eso ayuda a que el bundle inicial pese
+// menos y la app cargue mas rapido la primera vez.
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';

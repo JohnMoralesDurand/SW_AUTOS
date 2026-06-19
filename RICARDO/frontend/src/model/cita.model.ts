@@ -1,8 +1,9 @@
 // Modelo Cita.
-// Es la entidad mas usada del sistema. Tiene varios FK (client_id, vehicle_id,
-// service_id, mechanic_id) igual al patron de FK del profe (Alumno -> TipoDoc).
-// Cuando creo una cita desde el form solo mando los *_id; el backend devuelve
-// el objeto completo con los nombres ya resueltos (truco del serializer).
+// Es la entidad mas usada del sistema. Tiene varios FK: client_id,
+// vehicle_id, service_id y mechanic_id (este queda en null hasta que el
+// admin asigne uno). Cuando creo una cita desde el form solo mando los
+// *_id y el backend me devuelve el objeto completo con los nombres ya
+// resueltos por el serializer (asi no tengo que hacer requests extras).
 export class cita {
 
     constructor(id: number, client_id: number, vehicle_id: number,

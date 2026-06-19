@@ -1,6 +1,7 @@
 # URLs principales del proyecto.
-# Mismo formato que el ejemplo del profe: incluyo el admin de Django y delego
-# todo el resto al urls.py del app "api" con un include().
+# Aca solo registro lo basico: el panel admin de Django y un include() que
+# delega todo el resto al urls.py del app "api". Asi el archivo se queda
+# corto y la logica de rutas vive en cada app.
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin

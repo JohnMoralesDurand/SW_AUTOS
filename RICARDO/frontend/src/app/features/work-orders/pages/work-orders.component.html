@@ -51,7 +51,7 @@
             <span class="text-sm font-semibold text-slate-700">
               S/ {{ order.total_amount | number: '1.2-2' }}
             </span>
-            <!-- Estado: PrimeNG p-tag (siguiendo patron del profesor) -->
+            <!-- Estado de la orden con p-tag (azul=abierta, verde=cerrada) -->
             <p-tag [value]="order.status === 'open' ? 'Abierta' : 'Cerrada'"
                    [severity]="order.status === 'open' ? 'info' : 'success'">
             </p-tag>

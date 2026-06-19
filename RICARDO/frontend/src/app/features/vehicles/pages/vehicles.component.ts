@@ -1,17 +1,7 @@
-// =============================================================================
-// Componente de gestión de Vehículos (RF-08, RF-09, RF-10, RF-11, RF-12)
-// -----------------------------------------------------------------------------
-// El cliente puede:
-//   - Listar sus propios vehículos.
-//   - Registrar un nuevo vehículo (RN-02: placa peruana ABC-123).
-//   - Editar datos del vehículo (color, kilometraje, etc.).
-//   - Eliminar (desactivar lógicamente, RN-10) un vehículo.
-//
-// El administrador ve todos los vehículos del sistema.
-//
-// La placa se autocompleta con el guión y se convierte a mayúsculas mientras
-// el usuario escribe, para que no falle silenciosamente.
-// =============================================================================
+// Componente de gestion de Vehiculos.
+// El cliente lista sus autos, registra uno nuevo (con placa formato ABC-123),
+// edita los datos (color, km) y elimina (desactiva). El admin ve todos.
+// La placa se autocompleta con guion al escribir asi el formato sale bien.
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -26,6 +16,13 @@ import {
   Pencil,
 } from 'lucide-angular';
 
+// PrimeNG: tabla, botones, inputs, tag y tooltip de los botones de accion
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+
 import { VehicleService } from '../../../core/services/vehicle.service';
 import { Vehicle } from '../../../core/models/vehicle.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -34,7 +31,10 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
 @Component({
   selector: 'app-vehicles',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
+  imports: [
+    CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule,
+    TableModule, ButtonModule, InputTextModule, TagModule, TooltipModule,
+  ],
   templateUrl: './vehicles.component.html',
 })
 export class VehiclesComponent implements OnInit {

@@ -141,10 +141,9 @@
     </div>
   }
 
-  <!--
-    Listado de usuarios usando PrimeNG <p-table>
-    (siguiendo el patron del ejemplo del profesor en DESARROLLO_WEB_2.0)
-  -->
+  <!-- Listado de usuarios con PrimeNG p-table.
+       El cuerpo de la tabla se arma con ng-template let-user y los
+       botones de accion solo aparecen para los admin. -->
   <div class="card overflow-x-auto">
     <p-table [value]="users()" [rows]="10" [paginator]="users().length > 10"
              styleClass="p-datatable-sm" responsiveLayout="scroll"

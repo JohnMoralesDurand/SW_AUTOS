@@ -1,15 +1,18 @@
-// ApiService.
-// Misma estructura del ApiService que vimos en clase (DESARROLLO_WEB_2.0):
-//   - @Injectable con providedIn:'root'
-//   - private apiUrl con la URL del backend Django
-//   - constructor(private cliente: HttpClient)
-//   - metodos listarX / crearX / actualizarX / eliminarX que devuelven Observable<T>
-//
-// Aca uno en una sola clase las llamadas a todas las entidades principales
-// del taller (usuarios, vehiculos, servicios, citas, ordenes de trabajo).
-// El proyecto en su version final tiene los services separados por entidad
-// dentro de src/app/core/services/ (mejor organizacion al ser mas grande)
-// pero el patron interno es exactamente este.
+// ApiService unificado.
+// Aca centralizo en una sola clase las llamadas al backend para las
+// entidades principales del taller (usuarios, vehiculos, servicios, citas
+// y ordenes de trabajo). La estructura es la tipica:
+//   - @Injectable({ providedIn: 'root' }) -> singleton accesible desde
+//     cualquier componente.
+//   - private apiUrl -> URL base del backend Django.
+//   - constructor(private cliente: HttpClient) -> Angular me inyecta el
+//     HttpClient.
+//   - metodos listarX / crearX / actualizarX / eliminarX -> CRUD que
+//     devuelve Observable<T>.
+// En paralelo tengo los services separados por entidad en
+// src/app/core/services/ (uno por cada tabla del backend). Esa version
+// es la que termina usando la app porque es mas facil de mantener cuando
+// hay muchas entidades.
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -82,15 +85,15 @@ export class ApiService {
   }
 
   // ---------- Citas ----------
-  // Como en el ejemplo de Alumno del profe: al crear mando los *_id de las FK
-  // y el backend me devuelve el objeto enriquecido con los nombres.
+  // Al crear una cita mando los *_id de las FK (vehicle_id, service_id) y
+  // el backend me devuelve el objeto enriquecido con los nombres ya
+  // resueltos para no tener que ir a buscarlos despues.
   listarCitas(): Observable<cita[]> {
     return this.cliente.get<cita[]>(this.apiUrl + 'appointments');
   }
 
   crearCita(nueva: any): Observable<cita> {
-    // nueva trae vehicle_id, service_id, scheduled_at (igual al payload del
-    // alumnocreacion del profe con tipo_documento_id)
+    // nueva debe traer: vehicle_id, service_id, scheduled_at, notes (opc)
     return this.cliente.post<cita>(this.apiUrl + 'appointments', nueva);
   }
 

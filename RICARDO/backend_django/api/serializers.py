@@ -1,8 +1,10 @@
-# Serializers DRF.
-# Mismo patron del profe: heredamos de serializers.ModelSerializer y en el
-# Meta indicamos el model + los fields. Para mostrar campos calculados o
-# enlazar FK usamos SerializerMethodField (igual que el truco que vimos en
-# clase con tipo_documento_id / tipo_documento_nombre).
+# Serializers de Django REST Framework.
+# Cada serializer convierte una instancia de modelo a JSON (y al reves
+# cuando llega un POST/PUT desde el frontend). Heredamos de
+# serializers.ModelSerializer y en el Meta indicamos el model y los fields.
+# Para los campos derivados (nombre de la FK, totales calculados, etc.) uso
+# SerializerMethodField que llama a un metodo get_<campo>() que escribo
+# abajo.
 from rest_framework import serializers
 
 from .models import (
@@ -11,8 +13,9 @@ from .models import (
 )
 
 
-# Serializer de Usuario (igual al patron AlumnoSerializer del profe).
-# Listo los fields a mano para no exponer el password_hash.
+# Serializer de Usuario.
+# Listo los fields a mano (no uso __all__) para evitar exponer el
+# password_hash al frontend, eso seria un hueco de seguridad.
 class UserSerializer(serializers.ModelSerializer):
     """Representacion publica del usuario (sin contrasena)."""
 
@@ -69,10 +72,12 @@ class ServiceSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# Serializer de Cita. Igual al truco que vimos con tipo_documento_nombre
-# del profe pero usando SerializerMethodField para varios campos a la vez:
-# en vez de devolver solo el ID de la FK, devuelvo tambien el nombre
-# para que el frontend no tenga que hacer otra consulta.
+# Serializer de Cita.
+# Ademas de los campos del modelo expongo nombres ya resueltos
+# (client_name, vehicle_plate, service_name, mechanic_name) para que el
+# frontend no tenga que hacer requests extra a /users, /vehicles y
+# /services cada vez que muestra la tabla de citas. Cada uno se calcula
+# en su metodo get_<campo>() de abajo.
 class AppointmentSerializer(serializers.ModelSerializer):
     """Cita con datos enriquecidos para el frontend."""
 

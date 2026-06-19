@@ -2,14 +2,14 @@
 Settings de Django para el proyecto AutoServ.
 Backend del Sistema de Gestion de Taller Mecanico.
 
-La estructura sigue el ejemplo del profe (proyecto "inscripcion"): tenemos un
-solo app "api" donde van models/serializers/views/urls, mas la config de
-DRF + JWT + CORS para que se conecte con el frontend Angular.
+Toda la app vive en un solo modulo llamado "api" donde tengo los models,
+serializers, views y urls. Aparte van las configuraciones de DRF, JWT y
+CORS para que el frontend Angular pueda comunicarse con este backend.
 """
 from datetime import timedelta
 from pathlib import Path
 
-# BASE_DIR apunta a la carpeta del manage.py (igual al ejemplo del profe)
+# BASE_DIR apunta a la carpeta donde esta el manage.py
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ---------------------------------------------------------------------------
@@ -26,11 +26,11 @@ ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     # Mi app principal (ahi van models, views, serializers, urls)
     'api',
-    # DRF para los ViewSets que vimos en clase
+    # Django REST Framework para construir el API REST con los ViewSets
     'rest_framework',
-    # JWT para el login (como el ejemplo de LP1 con TokenObtainPair)
+    # JWT para autenticar al usuario sin sesiones (devuelve un token al login)
     'rest_framework_simplejwt',
-    # CORS para que Angular en :4200 pueda llamar al backend en :8000
+    # corsheaders deja que Angular en :4200 pueda llamar al backend en :8001
     'corsheaders',
     # Apps por defecto de Django
     'django.contrib.admin',
@@ -80,7 +80,7 @@ WSGI_APPLICATION = 'autoserv.wsgi.application'
 
 
 # ---------------------------------------------------------------------------
-# Base de datos (SQLite por simplicidad - igual que el proyecto del profesor)
+# Base de datos: uso SQLite por simplicidad (no necesita instalacion)
 # ---------------------------------------------------------------------------
 DATABASES = {
     'default': {
@@ -138,8 +138,9 @@ SIMPLE_JWT = {
 
 # CORS para conectar con el frontend.
 # Sin esto el navegador bloquea las llamadas desde Angular (localhost:4200)
-# al backend Django (localhost:8001). Es la misma config que tiene el profe
-# en el settings.py del ejemplo de DESARROLLO_WEB_2.0.
+# al backend Django (localhost:8001) por la politica same-origin. Listo
+# explicitamente los origenes permitidos para no abrir el CORS a todo el
+# mundo.
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:4200',
     'http://127.0.0.1:4200',

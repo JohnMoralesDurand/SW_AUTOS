@@ -1,16 +1,7 @@
-// =============================================================================
-// Componente del Catálogo de Servicios (RF-11, RF-12, RF-13, RF-14)
-// -----------------------------------------------------------------------------
-// - Administrador: ve todos los servicios (activos e inactivos), puede crear
-//   nuevos, editar existentes y habilitar/deshabilitar (RN-10).
-// - Cliente: ve los servicios activos y puede reservarlos directamente con un
-//   botón "Reservar" que lo lleva a /app/appointments/new con el servicio
-//   preseleccionado.
-// - Mecánico: ve los servicios activos (solo informativo).
-//
-// Las fotos del auto se manejan en la pagina de Ordenes de Trabajo, no aqui,
-// porque corresponden a un servicio especifico realizado en una visita.
-// =============================================================================
+// Componente del Catalogo de Servicios.
+// Admin: ve activos e inactivos, puede crear, editar y habilitar/deshabilitar.
+// Cliente: solo activos + boton para reservar.
+// Mecanico: solo activos (informativo).
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -27,6 +18,13 @@ import {
   Pencil,
 } from 'lucide-angular';
 
+// PrimeNG para tabla, botones, inputs, tag y tooltip
+import { TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
 import { Service } from '../../../core/models/service.model';
 import { AuthService } from '../../../core/services/auth.service';
@@ -35,7 +33,10 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
 @Component({
   selector: 'app-services',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, LucideAngularModule],
+  imports: [
+    CommonModule, ReactiveFormsModule, LucideAngularModule,
+    TableModule, ButtonModule, InputTextModule, TagModule, TooltipModule,
+  ],
   templateUrl: './services.component.html',
 })
 export class ServicesComponent implements OnInit {

@@ -1,117 +1,93 @@
-<!-- Plantilla del feature de vehículos -->
+<!-- Plantilla del feature de vehiculos -->
 <div class="space-y-6">
+
+  <!-- Cabecera con titulo y boton de nuevo (solo cliente, el admin solo ve) -->
   <div class="flex items-center justify-between">
     <div>
-      <h2 class="text-2xl font-bold text-slate-800">Vehículos</h2>
-      <p class="text-sm text-slate-500">Administre los vehículos asociados a su cuenta.</p>
+      <h2 class="text-2xl font-bold text-slate-800">Vehiculos</h2>
+      <p class="text-sm text-slate-500">Administre los vehiculos asociados a su cuenta.</p>
     </div>
     @if (!authService.isAdmin()) {
-      <button (click)="openCreateForm()" class="btn-primary">
-        <lucide-icon [img]="plusIcon" [size]="18"></lucide-icon>
-        Nuevo vehículo
-      </button>
+      <p-button label="Nuevo vehiculo" icon="pi pi-plus"
+                [raised]="true" severity="info"
+                (click)="openCreateForm()"/>
     }
   </div>
 
-  <!-- Formulario crear/editar -->
+  <!-- Formulario crear/editar (solo cliente) -->
   @if (showForm()) {
     <div class="card">
       <div class="mb-4 flex items-center justify-between">
         <h3 class="text-lg font-semibold text-slate-800">
-          {{ editingId() ? 'Editar vehículo' : 'Registrar nuevo vehículo' }}
+          {{ editingId() ? 'Editar vehiculo' : 'Registrar nuevo vehiculo' }}
         </h3>
-        <button (click)="closeForm()" class="text-slate-500 hover:text-slate-700" aria-label="Cerrar">
-          <lucide-icon [img]="closeIcon" [size]="20"></lucide-icon>
-        </button>
+        <p-button icon="pi pi-times" severity="secondary"
+                  [text]="true" [rounded]="true"
+                  (click)="closeForm()"/>
       </div>
 
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="grid grid-cols-1 gap-4 md:grid-cols-3" novalidate>
-        <!-- Placa (sólo se edita en creación) -->
-        <div>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()"
+            class="grid grid-cols-1 gap-4 md:grid-cols-3" novalidate>
+
+        <!-- Placa (formato peruano ABC-123, solo editable al crear) -->
+        <div class="campo">
           <label class="form-label">Placa <span class="text-red-500">*</span></label>
-          <input
-            type="text"
-            formControlName="license_plate"
-            placeholder="ABC-123"
-            class="form-input uppercase disabled:bg-slate-100 disabled:text-slate-500"
-            (input)="onPlateInput($event)"
-            maxlength="7"
-            [class.border-red-300]="fieldHasError('license_plate')"
-          />
+          <input type="text" pInputText formControlName="license_plate"
+                 placeholder="ABC-123" class="w-full uppercase"
+                 (input)="onPlateInput($event)" maxlength="7"
+                 [class.p-invalid]="fieldHasError('license_plate')"/>
           @if (fieldHasError('license_plate')) {
             <p class="mt-1 text-xs text-red-600">{{ fieldError('license_plate') }}</p>
           } @else if (editingId()) {
-            <p class="mt-1 text-xs text-slate-400">La placa no puede modificarse después del registro.</p>
+            <p class="mt-1 text-xs text-slate-400">La placa no se modifica despues del registro.</p>
           } @else {
-            <p class="mt-1 text-xs text-slate-400">Formato peruano: 3 letras o números, guión y 3 dígitos.</p>
+            <p class="mt-1 text-xs text-slate-400">Formato peruano: 3 letras y 3 digitos.</p>
           }
         </div>
 
-        <!-- Marca -->
-        <div>
+        <div class="campo">
           <label class="form-label">Marca <span class="text-red-500">*</span></label>
-          <input
-            type="text"
-            formControlName="brand"
-            placeholder="Toyota"
-            class="form-input"
-            [class.border-red-300]="fieldHasError('brand')"
-          />
+          <input type="text" pInputText formControlName="brand"
+                 placeholder="Toyota" class="w-full"
+                 [class.p-invalid]="fieldHasError('brand')"/>
           @if (fieldHasError('brand')) {
             <p class="mt-1 text-xs text-red-600">{{ fieldError('brand') }}</p>
           }
         </div>
 
-        <!-- Modelo -->
-        <div>
+        <div class="campo">
           <label class="form-label">Modelo <span class="text-red-500">*</span></label>
-          <input
-            type="text"
-            formControlName="model"
-            placeholder="Yaris"
-            class="form-input"
-            [class.border-red-300]="fieldHasError('model')"
-          />
+          <input type="text" pInputText formControlName="model"
+                 placeholder="Yaris" class="w-full"
+                 [class.p-invalid]="fieldHasError('model')"/>
           @if (fieldHasError('model')) {
             <p class="mt-1 text-xs text-red-600">{{ fieldError('model') }}</p>
           }
         </div>
 
-        <!-- Año -->
-        <div>
+        <div class="campo">
           <label class="form-label">Año <span class="text-red-500">*</span></label>
-          <input
-            type="number"
-            formControlName="year"
-            class="form-input"
-            min="1950"
-            [max]="currentYear + 1"
-            [class.border-red-300]="fieldHasError('year')"
-          />
+          <input type="number" pInputText formControlName="year"
+                 [min]="1950" [max]="currentYear + 1" class="w-full"
+                 [class.p-invalid]="fieldHasError('year')"/>
           @if (fieldHasError('year')) {
             <p class="mt-1 text-xs text-red-600">{{ fieldError('year') }}</p>
           }
         </div>
 
-        <!-- Kilometraje -->
-        <div>
+        <div class="campo">
           <label class="form-label">Kilometraje <span class="text-red-500">*</span></label>
-          <input
-            type="number"
-            formControlName="mileage"
-            class="form-input"
-            min="0"
-            [class.border-red-300]="fieldHasError('mileage')"
-          />
+          <input type="number" pInputText formControlName="mileage" min="0"
+                 class="w-full" [class.p-invalid]="fieldHasError('mileage')"/>
           @if (fieldHasError('mileage')) {
             <p class="mt-1 text-xs text-red-600">{{ fieldError('mileage') }}</p>
           }
         </div>
 
-        <!-- Color -->
-        <div>
+        <div class="campo">
           <label class="form-label">Color</label>
-          <input type="text" formControlName="color" placeholder="Rojo" class="form-input" />
+          <input type="text" pInputText formControlName="color"
+                 placeholder="Rojo" class="w-full"/>
         </div>
 
         @if (errorMessage()) {
@@ -122,56 +98,113 @@
         }
 
         <div class="md:col-span-3 flex justify-end gap-2">
-          <button type="button" (click)="closeForm()" class="btn-outline">Cancelar</button>
-          <button type="submit" class="btn-primary" [disabled]="loading()">
-            {{ loading() ? 'Guardando...' : (editingId() ? 'Guardar cambios' : 'Registrar') }}
-          </button>
+          <p-button label="Cancelar" severity="secondary" [outlined]="true"
+                    type="button" (click)="closeForm()"/>
+          <p-button [label]="loading() ? 'Guardando...' : (editingId() ? 'Guardar cambios' : 'Registrar')"
+                    icon="pi pi-check" severity="info" [raised]="true"
+                    type="submit" [disabled]="loading()"/>
         </div>
       </form>
     </div>
   }
 
-  <!-- Listado de vehículos -->
-  @if (vehicles().length === 0) {
-    <div class="card flex flex-col items-center py-16">
-      <div class="rounded-2xl bg-mint-100 p-4 text-mint-600">
-        <lucide-icon [img]="carIcon" [size]="32"></lucide-icon>
-      </div>
-      <p class="mt-3 text-base font-semibold text-slate-700">No tiene vehículos registrados</p>
-      <p class="text-sm text-slate-500">Registre su primer vehículo para reservar citas.</p>
-    </div>
-  } @else {
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-      @for (vehicle of vehicles(); track vehicle.id) {
-        <div class="card flex flex-col">
-          <div class="mb-3 flex items-center justify-between">
-            <div class="rounded-xl bg-mint-100 p-2 text-mint-700">
-              <lucide-icon [img]="carIcon" [size]="22"></lucide-icon>
-            </div>
-            @if (!authService.isAdmin()) {
-              <div class="flex items-center gap-1">
-                <button (click)="openEditForm(vehicle)" class="rounded-lg p-1.5 text-mint-700 hover:bg-mint-50" aria-label="Editar vehículo">
-                  <lucide-icon [img]="editIcon" [size]="18"></lucide-icon>
-                </button>
-                <button (click)="onDelete(vehicle)" class="rounded-lg p-1.5 text-red-500 hover:bg-red-50" aria-label="Eliminar vehículo">
-                  <lucide-icon [img]="trashIcon" [size]="18"></lucide-icon>
-                </button>
-              </div>
+  <!-- Vista de tabla para el ADMIN (CRUD basico de visualizacion + historial) -->
+  @if (authService.isAdmin()) {
+    <p-table [value]="vehicles()" [tableStyle]="{ 'min-width': '50rem' }"
+             styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>ID</th>
+          <th>Placa</th>
+          <th>Marca</th>
+          <th>Modelo</th>
+          <th class="text-center">Año</th>
+          <th class="text-right">Km</th>
+          <th>Color</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-v>
+        <tr>
+          <td>{{ v.id }}</td>
+          <td class="font-semibold">{{ v.license_plate }}</td>
+          <td>{{ v.brand }}</td>
+          <td>{{ v.model }}</td>
+          <td class="text-center">{{ v.year }}</td>
+          <td class="text-right">{{ v.mileage | number }}</td>
+          <td>
+            @if (v.color) {
+              <p-tag [value]="v.color" severity="info"/>
+            } @else {
+              <span class="text-slate-400">-</span>
             }
-          </div>
-          <p class="text-lg font-bold text-slate-800">{{ vehicle.license_plate }}</p>
-          <p class="text-sm text-slate-600">{{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.year }})</p>
-          <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
-            <span>{{ vehicle.mileage | number }} km</span>
-            @if (vehicle.color) {
-              <span>{{ vehicle.color }}</span>
-            }
-          </div>
-          <a [routerLink]="['/app/vehicles', vehicle.id, 'history']" class="btn-outline mt-4 w-full text-xs">
-            Ver historial y mantenimiento
-          </a>
+          </td>
+          <td class="text-center">
+            <a [routerLink]="['/app/vehicles', v.id, 'history']">
+              <p-button icon="pi pi-history" severity="info"
+                        [rounded]="true" [outlined]="true"
+                        pTooltip="Ver historial"/>
+            </a>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="text-center py-8 text-slate-500">
+            No hay vehiculos registrados.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+
+  <!-- Vista de tarjetas para el CLIENTE -->
+  @if (!authService.isAdmin()) {
+    @if (vehicles().length === 0) {
+      <div class="card flex flex-col items-center py-16">
+        <div class="rounded-2xl bg-mint-100 p-4 text-mint-600">
+          <lucide-icon [img]="carIcon" [size]="32"></lucide-icon>
         </div>
-      }
-    </div>
+        <p class="mt-3 text-base font-semibold text-slate-700">No tiene vehiculos registrados</p>
+        <p class="text-sm text-slate-500">Registre su primer vehiculo para reservar citas.</p>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        @for (vehicle of vehicles(); track vehicle.id) {
+          <div class="card flex flex-col">
+            <div class="mb-3 flex items-center justify-between">
+              <div class="rounded-xl bg-mint-100 p-2 text-mint-700">
+                <lucide-icon [img]="carIcon" [size]="22"></lucide-icon>
+              </div>
+              <div class="flex items-center gap-1">
+                <p-button icon="pi pi-pencil" severity="info"
+                          [rounded]="true" [outlined]="true"
+                          pTooltip="Editar"
+                          (click)="openEditForm(vehicle)"/>
+                <p-button icon="pi pi-trash" severity="danger"
+                          [rounded]="true" [outlined]="true"
+                          pTooltip="Eliminar"
+                          (click)="onDelete(vehicle)"/>
+              </div>
+            </div>
+            <p class="text-lg font-bold text-slate-800">{{ vehicle.license_plate }}</p>
+            <p class="text-sm text-slate-600">{{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.year }})</p>
+            <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+              <span>{{ vehicle.mileage | number }} km</span>
+              @if (vehicle.color) {
+                <p-tag [value]="vehicle.color" severity="info"/>
+              }
+            </div>
+            <a [routerLink]="['/app/vehicles', vehicle.id, 'history']" class="mt-4">
+              <p-button label="Ver historial" icon="pi pi-history"
+                        severity="secondary" [outlined]="true"
+                        styleClass="w-full"/>
+            </a>
+          </div>
+        }
+      </div>
+    }
   }
 </div>

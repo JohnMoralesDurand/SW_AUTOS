@@ -1,8 +1,11 @@
 // Componente de Usuarios.
-// Es el CRUD mas parecido al ejemplo de Alumno del profe: una tabla con los
-// usuarios + un formulario para crear mecanicos + boton para activar/
-// desactivar. La logica esta toda en el UserService que llama al backend
-// Django, igual que el ApiService del profe.
+// Pantalla del admin para gestionar el personal del taller:
+//   - Tabla con todos los usuarios (filtrable por rol).
+//   - Formulario para registrar mecanicos (con especialidad y horario).
+//   - Boton para activar/desactivar usuarios (no se borran fisico).
+// Toda la logica HTTP queda en el UserService; este componente solo se
+// preocupa por el estado de la UI (signal con la lista, mostrar/ocultar
+// formulario, errores).
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -15,7 +18,7 @@ import {
   AlertCircle,
 } from 'lucide-angular';
 
-// PrimeNG (aplicado siguiendo el ejemplo del profesor)
+// PrimeNG: la tabla del listado, botones de accion y tag para el rol
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -30,7 +33,6 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, LucideAngularModule,
-    // Modulos PrimeNG (referencia: profesor en DESARROLLO_WEB_2.0)
     TableModule, ButtonModule, TagModule,
   ],
   templateUrl: './users.component.html',

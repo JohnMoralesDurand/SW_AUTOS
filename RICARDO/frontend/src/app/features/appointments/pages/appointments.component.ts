@@ -1,7 +1,9 @@
 // Componente standalone de la pantalla "Citas".
-// Mismo patron del Alumnolista del profe: @Component con templateUrl,
-// la lista se llena en ngOnInit() llamando al service, y los botones
-// disparan metodos del componente que llaman al service y refrescan.
+// Es el listado principal con filtros por estado. En ngOnInit() llamo al
+// AppointmentService para traer las citas y las guardo en un signal asi
+// el template se re-renderiza solo cuando cambia la lista. Los botones de
+// accion (confirmar, cancelar, asignar mecanico, iniciar) llaman al
+// service y al terminar refrescan la tabla con load().
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -19,9 +21,9 @@ import {
   Eye,
 } from 'lucide-angular';
 
-// PrimeNG: los mismos modulos que uso el profe en alumnolista.html
-// (p-table para listar y p-button para las acciones). El p-tag lo agrego
-// yo para mostrar el estado de la cita con color.
+// PrimeNG: TableModule para la tabla del listado, ButtonModule para los
+// botones de accion y TagModule para mostrar el estado de la cita con
+// colores (pendiente=info, confirmada=warn, completada=success, etc).
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
@@ -45,7 +47,7 @@ interface StatusOption {
   standalone: true,
   imports: [
     CommonModule, RouterLink, FormsModule, LucideAngularModule,
-    // Modulos PrimeNG (referencia: profesor en DESARROLLO_WEB_2.0)
+    // Modulos PrimeNG: tabla, botones y tag para el estado
     TableModule, ButtonModule, TagModule,
   ],
   templateUrl: './appointments.component.html',
@@ -98,16 +100,15 @@ export class AppointmentsComponent implements OnInit {
     public authService: AuthService,
   ) {}
 
-  // ngOnInit se ejecuta cuando se crea el componente. Aca llamo a la
-  // funcion que llena la tabla con el subscribe (igual al patron del profe)
+  // ngOnInit se ejecuta cuando Angular crea el componente. Aca aprovecho
+  // para hacer la primera carga de la lista de citas.
   ngOnInit(): void {
     this.loadAppointments();
   }
 
-  // Trae las citas del backend (le paso el filtro por estado si hay).
-  // El .subscribe() es lo mismo que .subscribe(lista => ...) del Alumnolista
-  // del profe, solo que aca uso la forma con { next: ... } por si despues
-  // quiero manejar el error.
+  // Trae las citas del backend pasando el filtro por estado si hay alguno.
+  // Uso la forma con { next: ... } por si en el futuro quiero agregar un
+  // { error: ... } para mostrar mensajes de error.
   loadAppointments(): void {
     const status = this.statusFilter() || undefined;
     this.appointmentService.list(status as AppointmentStatus | undefined).subscribe({

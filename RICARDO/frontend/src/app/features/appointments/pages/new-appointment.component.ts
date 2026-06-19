@@ -1,27 +1,12 @@
-// =============================================================================
-// Componente "Nueva Cita" (RF-15, RF-16, RF-17, RF-18)
-// -----------------------------------------------------------------------------
-// Es el flujo principal del cliente: reservar una cita para su vehículo.
-//
-// Pasos de la pantalla:
-//   1. Seleccionar vehículo registrado (se cargan al iniciar - RN-08).
-//   2. Seleccionar servicio del catálogo (solo activos - RF-13).
-//   3. Elegir una fecha (no se permite fechas pasadas).
-//   4. El sistema consulta los slots disponibles ese día (RF-17).
-//   5. El cliente elige uno y confirma la reserva (RF-18).
-//
-// La pagina puede recibir un query param ?service_id=<id> que viene del
-// catálogo de servicios cuando el cliente hace click en "Reservar".
-//
-// Reglas de negocio que aplica el backend al reservar:
-//   - RN-04: no se puede reservar un slot ya ocupado.
-//   - RN-05: anticipación mínima de 2 horas.
-//   - RN-07: máximo 3 citas activas por cliente.
-//   - RN-11: el precio del servicio se "congela" al momento de reservar.
-// =============================================================================
+// Componente Nueva Cita.
+// Flujo principal del cliente: elige vehiculo -> servicio -> fecha -> el
+// sistema le muestra los horarios libres -> confirma reserva.
+// Puede llegar con ?service_id=X desde el catalogo (preselecciona servicio).
+// El backend valida las reglas (no solapamiento, minimo 2h de anticipacion,
+// max 3 citas activas, precio congelado).
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   LucideAngularModule,
@@ -32,6 +17,12 @@ import {
   CheckCircle,
   AlertCircle,
 } from 'lucide-angular';
+
+// PrimeNG para el dropdown de vehiculo/servicio, botones e inputs
+import { DropdownModule } from 'primeng/dropdown';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
 
 import { Vehicle } from '../../../core/models/vehicle.model';
 import { Service } from '../../../core/models/service.model';
@@ -44,7 +35,10 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
 @Component({
   selector: 'app-new-appointment',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule],
+  imports: [
+    CommonModule, FormsModule, ReactiveFormsModule, RouterLink, LucideAngularModule,
+    DropdownModule, ButtonModule, InputTextModule, TagModule,
+  ],
   templateUrl: './new-appointment.component.html',
 })
 export class NewAppointmentComponent implements OnInit {

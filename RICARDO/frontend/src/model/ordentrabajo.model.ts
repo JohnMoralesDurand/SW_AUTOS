@@ -1,7 +1,7 @@
 // Modelo Orden de Trabajo.
-// Se crea automaticamente cuando una cita pasa a "in_progress".
-// Aca el mecanico anota el diagnostico, agrega items (repuestos) y al final
-// la cierra. Sigue el mismo formato class del profe.
+// Se crea automaticamente cuando una cita pasa a estado "in_progress".
+// El mecanico anota el diagnostico, agrega items (repuestos / mano de
+// obra) y al final cierra la orden. Tiene FK al appointment.
 export class ordentrabajo {
 
     constructor(id: number, appointment_id: number, diagnosis: string,

@@ -25,7 +25,7 @@ import {
   Trash2,
 } from 'lucide-angular';
 
-// PrimeNG (referencia: profesor en DESARROLLO_WEB_2.0)
+// PrimeNG para los botones y el tag de estado de la orden
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 

@@ -1,5 +1,7 @@
 // Modelo Servicio del catalogo del taller.
-// Mismo formato del modelo Alumno del profe (class con constructor + campos).
+// Class TypeScript con los campos del servicio (nombre, descripcion,
+// categoria, duracion, precio) y un flag is_active para desactivar sin
+// borrar.
 export class servicio {
 
     constructor(id: number, name: string, description: string, category: string,

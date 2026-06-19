@@ -1,7 +1,7 @@
 // Config principal de la app Angular.
-// Aca registro los providers globales: el router, HttpClient (para llamar
-// al backend Django como vimos en clase), animaciones para PrimeNG y
-// Chart.js para los graficos del dashboard.
+// Aca registro los providers globales que necesita toda la app: el router
+// con las rutas, HttpClient para hablar con el backend Django, las
+// animaciones que requiere PrimeNG y Chart.js para los reportes.
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -13,13 +13,13 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // routing standalone (sin NgModule) tal como lo hizo el profe
+    // Router con las rutas (standalone, sin NgModule)
     provideRouter(routes),
-    // HttpClient + interceptor que agrega el token JWT a cada request
+    // HttpClient con el interceptor que inyecta el token JWT en cada request
     provideHttpClient(withInterceptors([authInterceptor])),
-    // PrimeNG necesita animaciones para los dialogos / dropdowns / tags
+    // PrimeNG necesita animaciones para sus dialogos, dropdowns y tags
     provideAnimations(),
-    // ng2-charts: registra los controllers de Chart.js para los reportes
+    // Chart.js: registra los controllers para los graficos del dashboard
     provideCharts(withDefaultRegisterables()),
   ],
 };

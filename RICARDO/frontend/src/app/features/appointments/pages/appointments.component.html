@@ -27,12 +27,9 @@
     }
   </div>
 
-  <!-- Listado en tabla -->
-  <!--
-    Listado de citas con PrimeNG <p-table>
-    (siguiendo el patron del ejemplo del profesor en DESARROLLO_WEB_2.0)
-    Se mantienen los botones de accion personalizados de Tailwind para
-    no perder el flujo de RF-19 a RF-24.
+  <!-- Listado de citas con PrimeNG p-table.
+       Los botones de accion (confirmar, cancelar, asignar, iniciar) se
+       muestran condicionalmente segun el estado de la cita.
   -->
   <div class="card overflow-x-auto">
     <p-table [value]="appointments()" [rows]="10" [paginator]="appointments().length > 10"

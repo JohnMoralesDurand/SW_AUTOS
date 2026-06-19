@@ -1,14 +1,15 @@
 // AuthService.
-// Es la version "ampliada" del AuthService que vimos en LP1 (el que pedia
-// el token a /api/token/ y lo guardaba en localStorage). Aca hago lo mismo
-// pero ademas:
-//   - mantengo el usuario actual con un signal() para que el sidebar y los
-//     guards lo lean reactivamente,
-//   - tengo computed() para isAdmin / isClient / isMechanic,
-//   - valido la respuesta del backend con Zod por si llega algo raro.
-// El interceptor que esta en core/interceptors/auth.interceptor.ts es el
-// que mete el "Bearer <token>" en cada request, asi no tengo que repetirlo
-// en cada metodo.
+// Maneja todo lo relacionado al login del usuario:
+//   - login(): manda email/password al backend y guarda el token JWT.
+//   - register(): crea una cuenta de cliente.
+//   - logout(): borra la sesion y vuelve al login.
+//   - currentUser: signal reactivo con el usuario actual.
+//   - isAdmin / isClient / isMechanic: computed para usar en los guards y
+//     en las plantillas (ej: @if(authService.isAdmin())).
+// El token se persiste en localStorage para que la sesion sobreviva al
+// refrescar la pagina. El interceptor de
+// core/interceptors/auth.interceptor.ts es el que agrega el header
+// Authorization en cada request, asi no lo tengo que repetir aca.
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
@@ -19,10 +20,10 @@ import { TokenResponse, User, tokenResponseSchema } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  // mismo patron del profe: private apiUrl = '...' apuntando al backend
+  // URL del backend Django (endpoints /api/auth/login y /api/auth/register)
   private readonly apiUrl = `${environment.apiUrl}/auth`;
-  // las dos claves de localStorage donde se guarda la sesion (como el
-  // 'access' / 'refresh' del ejemplo de LP1)
+  // Las dos keys donde guardo la sesion en localStorage para que aguante
+  // refrescar la pagina sin tener que volver a loguearse
   private readonly TOKEN_KEY = 'autoserv_token';
   private readonly USER_KEY = 'autoserv_user';
 

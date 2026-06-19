@@ -1,18 +1,11 @@
-// =============================================================================
-// Componente del Dashboard principal del sistema AutoServ
-// -----------------------------------------------------------------------------
-// Este componente es la pantalla de inicio que ve cualquier usuario logueado.
-// Su contenido cambia segun el rol:
-//   - Admin: ve estadisticas generales + graficos de tendencias + proximas citas.
-//   - Cliente / Mecanico: ve unicamente el listado de proximas citas.
-//
-// Conceptos Angular usados aqui (utiles para explicar al profesor):
-//   - signal()  -> reactividad moderna (Angular 17). Sustituye a Subject/BehaviorSubject
-//                  para estado local, y la vista se re-renderiza sola al cambiar.
-//   - inject()  -> alternativa moderna al constructor para servicios.
-//   - standalone: true -> el componente no necesita un NgModule.
-//   - ng2-charts -> wrapper de Chart.js para Angular; se usa via <canvas baseChart>.
-// =============================================================================
+// Componente del Dashboard.
+// Es la pantalla de inicio despues del login. Cambia segun el rol:
+//   - Admin: ve KPIs (citas, clientes, ingresos), graficos de tendencias y
+//     proximas citas.
+//   - Cliente / Mecanico: solo ve sus proximas citas.
+// Tecnicamente uso signal() para el estado reactivo (Angular 17),
+// componentes standalone (sin NgModule) y ng2-charts para los graficos
+// (es un wrapper de Chart.js que se usa con <canvas baseChart>).
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';

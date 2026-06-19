@@ -1,8 +1,9 @@
 # Views del API.
-# Misma estructura del ejemplo del profe: cada entidad tiene un ViewSet que
-# hereda de viewsets.ModelViewSet (CRUD automatico). Cuando la logica de
-# negocio es mas complicada (validaciones de horario, cierre de orden, etc.)
-# agregamos acciones extras con el decorador @action.
+# Cada entidad tiene un ViewSet que hereda de viewsets.ModelViewSet, lo que
+# nos da gratis los endpoints CRUD (list, retrieve, create, update, destroy).
+# Para la logica que no es CRUD puro (validaciones de horario, cierre de
+# orden, asignacion de mecanico, etc.) agrego acciones extras con el
+# decorador @action.
 from datetime import datetime, time, timedelta
 
 from django.utils import timezone
@@ -85,8 +86,9 @@ class LoginView(APIView):
 
 
 # ViewSet de Usuario.
-# Igual al patron AlumnoViewSet del profe: queryset + serializer_class y
-# DRF ya nos da list / retrieve / create / update / destroy gratis.
+# Con solo declarar queryset + serializer_class, DRF me genera todas las
+# rutas: GET /users, POST /users, GET/PUT/DELETE /users/<id>. Las acciones
+# de abajo (create_mechanic, toggle_status) son extras propios.
 class UserViewSet(viewsets.ModelViewSet):
     """CRUD de usuarios. Filtros por rol/especialidad (RF-07)."""
 
@@ -184,7 +186,7 @@ class VehicleViewSet(viewsets.ModelViewSet):
         return Response(VehicleSerializer(instance).data)
 
 
-# Servicios del taller. Mismo ModelViewSet de clase.
+# Servicios del taller. ModelViewSet con CRUD automatico.
 class ServiceViewSet(viewsets.ModelViewSet):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer

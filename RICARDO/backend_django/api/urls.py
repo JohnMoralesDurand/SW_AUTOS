@@ -1,9 +1,9 @@
 # Rutas del app "api".
-# Uso el DefaultRouter de DRF tal cual lo hicimos en clase:
-#   router = DefaultRouter()
-#   router.register('alumno', views.AlumnoViewSet)
-# Pero le paso trailing_slash='' para que las URLs queden sin barra al final,
-# que es lo que pide el frontend Angular que ya tenia.
+# Uso el DefaultRouter de DRF para que registre automaticamente todas las
+# rutas REST de cada ViewSet (GET/POST/PUT/DELETE). Le paso
+# trailing_slash='' para que las URLs queden sin barra al final, asi
+# coinciden con el formato que llama el frontend (ej: /api/users en vez
+# de /api/users/).
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 

@@ -1,7 +1,7 @@
 // Modelo Usuario.
-// Misma estructura que el modelo Alumno que vimos en clase: una class con
-// constructor que recibe los campos y los asigna a las propiedades de la
-// instancia. La uso desde el ApiService para tipar las respuestas del backend.
+// Es una class TypeScript con constructor que recibe los campos y los
+// asigna a las propiedades de la instancia. Asi puedo tipar las respuestas
+// del backend cuando llamo al ApiService (Observable<usuario[]>).
 export class usuario {
 
     constructor(id: number, first_name: string, last_name: string,

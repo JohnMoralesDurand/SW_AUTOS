@@ -1,6 +1,6 @@
 // Modelo Vehiculo.
-// Aca un Vehiculo tiene un dueño (owner_id), que es la FK al Usuario, igual
-// que como en el ejemplo del profe el Alumno tenia una FK a TipoDocumento.
+// Tiene un dueño (owner_id) que es la FK al Usuario. Es una relacion N a 1:
+// un cliente puede tener varios autos pero cada auto pertenece a uno solo.
 export class vehiculo {
 
     constructor(id: number, owner_id: number, license_plate: string,
