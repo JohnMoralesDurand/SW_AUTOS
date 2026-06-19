@@ -43,7 +43,7 @@
             <div>
               <p class="font-semibold text-slate-800">Orden #{{ order.display_number ?? order.id }}</p>
               <p class="text-xs text-slate-500">
-                Cita #{{ order.appointment_id }} · creada {{ order.created_at | date: 'short' }}
+                Cita #{{ order.appointment }} · creada {{ order.created_at | date: 'short' }}
               </p>
             </div>
           </div>

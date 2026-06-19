@@ -146,6 +146,11 @@
                         [rounded]="true" [outlined]="true"
                         pTooltip="Ver historial"/>
             </a>
+            &nbsp;
+            <p-button icon="pi pi-trash" severity="danger"
+                      [rounded]="true" [outlined]="true"
+                      pTooltip="Eliminar vehiculo"
+                      (onClick)="onDelete(v)"/>
           </td>
         </tr>
       </ng-template>

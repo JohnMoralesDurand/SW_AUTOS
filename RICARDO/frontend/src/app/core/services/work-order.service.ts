@@ -25,7 +25,8 @@ export interface WorkOrderPhoto {
 
 export interface WorkOrder {
   id: number;
-  appointment_id: number;
+  // El backend lo serializa como "appointment" (FK ID de la cita asociada).
+  appointment: number;
   diagnosis: string | null;
   total_amount: number;
   status: WorkOrderStatus;

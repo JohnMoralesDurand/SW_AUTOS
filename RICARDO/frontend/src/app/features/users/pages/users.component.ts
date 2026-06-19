@@ -16,6 +16,7 @@ import {
   ToggleRight,
   X,
   AlertCircle,
+  Pencil,
 } from 'lucide-angular';
 
 // PrimeNG: la tabla del listado, botones de accion y tag para el rol
@@ -44,10 +45,13 @@ export class UsersComponent implements OnInit {
   readonly toggleOffIcon = ToggleLeft;
   readonly closeIcon = X;
   readonly alertIcon = AlertCircle;
+  readonly editIcon = Pencil;
 
   readonly users = signal<User[]>([]);
   readonly roleFilter = signal<UserRole | ''>('');
   readonly showForm = signal(false);
+  // Si esta seteado, el form esta en modo edicion del mecanico con ese id
+  readonly editingId = signal<number | null>(null);
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
@@ -103,7 +107,12 @@ export class UsersComponent implements OnInit {
 
   toggleForm(): void {
     this.showForm.update((v) => !v);
+    this.editingId.set(null);
     this.errorMessage.set(null);
+    // En modo creacion todos los validadores aplican
+    this.form.get('dni')?.enable();
+    this.form.get('email')?.enable();
+    this.form.get('password')?.enable();
     this.form.reset({
       first_name: '',
       last_name: '',
@@ -113,6 +122,27 @@ export class UsersComponent implements OnInit {
       password: '',
       specialty: '',
       work_schedule: '',
+    });
+  }
+
+  /** Abre el form en modo edicion de un mecanico. DNI/email/password no son editables. */
+  openEditMechanic(user: User): void {
+    this.editingId.set(user.id);
+    this.errorMessage.set(null);
+    this.showForm.set(true);
+    // En edicion no se piden las credenciales (no se cambian desde aca)
+    this.form.get('dni')?.disable();
+    this.form.get('email')?.disable();
+    this.form.get('password')?.disable();
+    this.form.reset({
+      first_name: user.first_name,
+      last_name: user.last_name,
+      dni: user.dni,
+      email: user.email,
+      phone: user.phone ?? '',
+      password: '',
+      specialty: user.specialty ?? '',
+      work_schedule: user.work_schedule ?? '',
     });
   }
 
@@ -135,7 +165,7 @@ export class UsersComponent implements OnInit {
     return 'Valor inválido.';
   }
 
-  /** Crea un nuevo mecánico (RF-05). */
+  /** Crea o actualiza un mecanico segun el modo del form. */
   onSubmit(): void {
     this.form.markAllAsTouched();
     if (this.form.invalid) {
@@ -145,17 +175,40 @@ export class UsersComponent implements OnInit {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.userService.createMechanic(this.form.getRawValue()).subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.toggleForm();
-        this.loadUsers();
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.errorMessage.set(extractErrorMessage(err, 'Error al crear el mecánico.'));
-      },
-    });
+    const editing = this.editingId();
+    if (editing) {
+      // Edicion: solo mando los campos que se permiten cambiar
+      const raw = this.form.getRawValue();
+      this.userService.update(editing, {
+        first_name: raw.first_name,
+        last_name: raw.last_name,
+        phone: raw.phone,
+        specialty: raw.specialty,
+        work_schedule: raw.work_schedule,
+      }).subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.toggleForm();
+          this.loadUsers();
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.errorMessage.set(extractErrorMessage(err, 'No se pudo actualizar el mecanico.'));
+        },
+      });
+    } else {
+      this.userService.createMechanic(this.form.getRawValue()).subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.toggleForm();
+          this.loadUsers();
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.errorMessage.set(extractErrorMessage(err, 'Error al crear el mecánico.'));
+        },
+      });
+    }
   }
 
   onToggleStatus(user: User): void {

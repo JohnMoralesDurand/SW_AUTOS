@@ -54,6 +54,9 @@ RICARDO/backend/
 # --- Carpeta REFERENCIA (ejemplos del profesor, solo uso local) ---
 REFERENCIA/
 
+# --- Capturas de pantalla automatizadas (uso local para validar) ---
+_screenshots/
+
 # --- Outputs de testing/cobertura ---
 coverage/
 .pytest_cache/

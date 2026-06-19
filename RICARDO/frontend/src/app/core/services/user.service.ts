@@ -49,4 +49,15 @@ export class UserService {
   toggleStatus(id: number): Observable<User> {
     return this.http.patch<User>(`${this.apiUrl}/${id}/toggle-status`, {});
   }
+
+  /** Actualiza los datos editables de un usuario (sobre todo mecanicos). */
+  update(id: number, data: Partial<{
+    first_name: string;
+    last_name: string;
+    phone: string;
+    specialty: string;
+    work_schedule: string;
+  }>): Observable<User> {
+    return this.http.patch<User>(`${this.apiUrl}/${id}`, data);
+  }
 }
