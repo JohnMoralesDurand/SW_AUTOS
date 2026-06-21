@@ -1,7 +1,9 @@
-// Variables de entorno del frontend
-// Definen la URL del API que se utilizara en toda la aplicacion
-// El backend ahora corre en Django (puerto 8001)
+// environment.ts
+// Aca pongo la direccion donde corre el backend. La importan todos los
+// services para saber a donde mandar las peticiones HTTP. Si algun dia
+// el backend se publica en otro servidor, solo tengo que cambiar esta
+// linea y todo lo demas sigue funcionando.
 export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8001/api',
+  production: false,                         // false porque estoy en desarrollo
+  apiUrl: 'http://localhost:8001/api',       // Django esta en el puerto 8001
 };

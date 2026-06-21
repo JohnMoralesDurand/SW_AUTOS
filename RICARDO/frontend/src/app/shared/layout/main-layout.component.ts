@@ -1,16 +1,17 @@
-// =============================================================================
-// MainLayoutComponent - Estructura común a todas las páginas autenticadas
-// -----------------------------------------------------------------------------
-// Compone tres zonas:
-//   - Aside (sidebar) izquierdo: navegación + datos del usuario + logout.
-//   - Header superior: título de la página + campana de notificaciones.
-//   - Main: <router-outlet> donde se inserta el componente de la ruta actual.
+// main-layout.component.ts
+// Es el "armazon" que envuelve a todas las pantallas despues de iniciar
+// sesion. Tiene tres partes:
+//   - Sidebar a la izquierda: menu de navegacion, datos del usuario y
+//     boton de cerrar sesion.
+//   - Cabecera arriba: titulo de la pantalla actual y campanita de
+//     notificaciones.
+//   - Zona central: aca se mete la pantalla que corresponda a la URL
+//     actual (lo hace el <router-outlet>).
 //
-// El sidebar muestra distintos items según el rol del usuario:
-//   - admin: ve todos los items (incluye Reportes, Horarios, Usuarios).
-//   - mecánico: ve Dashboard, Servicios, Citas y Órdenes.
-//   - cliente: ve Dashboard, Mis vehículos, Servicios y Citas.
-// =============================================================================
+// El menu cambia segun el rol:
+//   - Admin: ve todos los items (incluye Reportes, Horarios, Usuarios).
+//   - Mecanico: ve Dashboard, Servicios, Citas y Ordenes.
+//   - Cliente: ve Dashboard, Mis vehiculos, Servicios y Citas.
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -35,11 +36,12 @@ import {
   NotificationService,
 } from '../../core/services/notification.service';
 
+// Cada opcion del menu del sidebar
 interface NavItem {
-  label: string;
-  path: string;
-  icon: any;
-  roles?: ('client' | 'mechanic' | 'admin')[];
+  label: string;                               // texto que se ve
+  path: string;                                // URL a la que lleva
+  icon: any;                                   // icono de Lucide
+  roles?: ('client' | 'mechanic' | 'admin')[]; // que roles lo ven (si vacio, todos)
 }
 
 @Component({
@@ -49,7 +51,7 @@ interface NavItem {
   templateUrl: './main-layout.component.html',
 })
 export class MainLayoutComponent implements OnInit {
-  // Iconos del layout
+  // Iconos que uso en el sidebar y la cabecera (los importe de lucide arriba)
   readonly dashboardIcon = LayoutDashboard;
   readonly carIcon = Car;
   readonly wrenchIcon = Wrench;
@@ -60,9 +62,11 @@ export class MainLayoutComponent implements OnInit {
   readonly reportsIcon = BarChart3;
   readonly checkIcon = CheckCircle;
 
-  // Estado del dropdown de notificaciones
+  // Controla si la lista de notificaciones esta abierta o cerrada
   readonly notificationsOpen = signal(false);
 
+  // Definicion del menu. Si un item tiene "roles", solo se muestra a esos
+  // roles; si no tiene, lo ven todos.
   readonly navItems: NavItem[] = [
     { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
     { label: 'Mis vehículos', path: '/app/vehicles', icon: Car, roles: ['client', 'admin'] },
@@ -79,31 +83,35 @@ export class MainLayoutComponent implements OnInit {
     public notificationService: NotificationService,
   ) {}
 
+  // Al entrar al layout, pido las notificaciones del usuario para mostrar
+  // el contador en la campanita
   ngOnInit(): void {
-    // Carga inicial de notificaciones
     this.notificationService.list().subscribe();
   }
 
-  /** Filtra los items según el rol del usuario actual. */
+  /** Devuelve solo los items del menu que el usuario actual puede ver. */
   visibleItems(): NavItem[] {
     const role = this.authService.currentUser()?.role;
     return this.navItems.filter((item) => !item.roles || item.roles.includes(role!));
   }
 
+  /** Abre o cierra el dropdown de notificaciones. Si lo abre, refresca la
+   *  lista para mostrar lo mas reciente. */
   toggleNotifications(): void {
     const opening = !this.notificationsOpen();
     this.notificationsOpen.set(opening);
     if (opening) {
-      // Refrescar al abrir
       this.notificationService.list().subscribe();
     }
   }
 
+  /** Marca como leida una notificacion cuando el usuario la clickea. */
   markRead(notification: Notification): void {
-    if (notification.is_read) return;
+    if (notification.is_read) return;  // si ya estaba leida, no hago nada
     this.notificationService.markAsRead(notification.id).subscribe();
   }
 
+  /** Cierra la sesion (delegado al AuthService). */
   onLogout(): void {
     this.authService.logout();
   }

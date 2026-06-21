@@ -1,13 +1,16 @@
-// Servicio Angular para consumir el API de reportes y estadisticas (RF-31, RF-32, RF-33).
-// Este servicio centraliza todas las llamadas HTTP relacionadas a metricas
-// del taller para que cualquier componente (dashboard, reportes) pueda usarlo.
+// report.service.ts
+// Maneja todas las consultas de reportes y estadisticas del taller. Lo
+// usa el dashboard del admin (los numeros grandes de arriba y los
+// graficos) y la pagina de Reportes.
+// Toda la cuenta la hace el backend; aca solo le pido los datos ya
+// procesados.
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 
-// Resumen general que se muestra en las tarjetas del dashboard.
+// Resumen general que se muestra en las 4 tarjetas del dashboard
 export interface DashboardSummary {
   total_clients: number;
   total_appointments: number;
@@ -16,19 +19,19 @@ export interface DashboardSummary {
   weekly_income: number;
 }
 
-// Cantidad de citas registradas en un dia especifico.
+// Cantidad de citas en un dia (para el grafico de barras "Citas por dia")
 export interface AppointmentsByDay {
-  day: string;   // Fecha en formato YYYY-MM-DD
-  total: number; // Numero de citas ese dia
+  day: string;   // Formato YYYY-MM-DD
+  total: number;
 }
 
-// Servicio mas solicitado y la cantidad de veces pedido.
+// Cada fila del ranking "Servicios mas pedidos"
 export interface TopService {
   service: string;
   total: number;
 }
 
-// Resultado del reporte de ingresos del taller.
+// Ingresos generados en un periodo
 export interface IncomeReport {
   start: string;
   end: string;
@@ -37,23 +40,22 @@ export interface IncomeReport {
 
 @Injectable({ providedIn: 'root' })
 export class ReportService {
-  // URL base del modulo de reportes en el backend.
   private readonly apiUrl = `${environment.apiUrl}/reports`;
 
   constructor(private http: HttpClient) {}
 
-  /** Resumen general del dashboard (total de citas, clientes, ingresos semanales). */
+  /** Trae los numeros del dashboard (totales y promedios actuales). */
   getSummary(): Observable<DashboardSummary> {
     return this.http.get<DashboardSummary>(`${this.apiUrl}/summary`);
   }
 
-  /** Servicios mas solicitados, ranking limitado por defecto a 5 (RF-32). */
+  /** Trae el ranking de servicios mas pedidos. Por defecto los top 5. */
   getTopServices(limit = 5): Observable<TopService[]> {
     const params = new HttpParams().set('limit', limit);
     return this.http.get<TopService[]>(`${this.apiUrl}/top-services`, { params });
   }
 
-  /** Citas agrupadas por dia dentro de un rango (RF-31). */
+  /** Trae cuantas citas hubo cada dia dentro de un rango (para el grafico). */
   getAppointmentsByPeriod(start: Date, end: Date): Observable<AppointmentsByDay[]> {
     const params = new HttpParams()
       .set('start', start.toISOString())
@@ -61,7 +63,7 @@ export class ReportService {
     return this.http.get<AppointmentsByDay[]>(`${this.apiUrl}/appointments`, { params });
   }
 
-  /** Ingresos generados por ordenes cerradas en un periodo (RF-33). */
+  /** Trae cuanto se facturo (ordenes cerradas) entre dos fechas. */
   getIncome(start: Date, end: Date): Observable<IncomeReport> {
     const params = new HttpParams()
       .set('start', start.toISOString())

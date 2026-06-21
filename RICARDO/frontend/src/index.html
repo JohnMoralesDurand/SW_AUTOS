@@ -1,10 +1,20 @@
 <!doctype html>
+<!--
+  index.html
+  Es el unico archivo HTML del proyecto. Toda la pagina se mete dentro de
+  la etiqueta <app-root> que veras abajo: ahi Angular va inyectando los
+  componentes (login, dashboard, etc) segun la ruta.
+  Tambien cargo la fuente Inter desde Google Fonts y aplico clases
+  iniciales de Tailwind al body (fondo color menta claro, texto oscuro).
+-->
 <html lang="es">
   <head>
     <meta charset="utf-8" />
     <title>AutoServ - Gestion de Taller Mecanico</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Conexion previa a Google Fonts para que la fuente cargue rapido -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -13,6 +23,7 @@
     />
   </head>
   <body class="bg-mint-50 text-slate-800">
+    <!-- Angular reemplaza esta etiqueta por la pantalla que corresponda -->
     <app-root></app-root>
   </body>
 </html>

@@ -1,4 +1,7 @@
-// Servicio para interactuar con el API del catalogo de servicios
+// service-catalog.service.ts
+// Maneja el catalogo de servicios del taller (cambio de aceite, frenos,
+// etc). El admin puede crear, editar y activar/desactivar; el cliente
+// solo lista los activos para reservar una cita.
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -12,27 +15,28 @@ export class ServiceCatalogService {
 
   constructor(private http: HttpClient) {}
 
-  /** Lista el catalogo de servicios (RF-15). */
+  /** Lista los servicios. Por defecto solo los activos; el admin manda
+   *  onlyActive=false para ver tambien los desactivados y poder reactivarlos. */
   list(onlyActive = true): Observable<Service[]> {
     return this.http.get<Service[]>(`${this.apiUrl}?only_active=${onlyActive}`);
   }
 
-  /** Catalogo publico para la pantalla de bienvenida (sin autenticacion). */
+  /** Mismo catalogo pero sin pedir login (lo usa la pagina de bienvenida). */
   listPublic(): Observable<Service[]> {
     return this.http.get<Service[]>(`${this.apiUrl}/public`);
   }
 
-  /** Crea un nuevo servicio (RF-13). */
+  /** Crea un servicio nuevo en el catalogo (solo admin). */
   create(data: ServiceCreate): Observable<Service> {
     return this.http.post<Service>(this.apiUrl, data);
   }
 
-  /** Actualiza un servicio existente (RF-14). */
+  /** Edita un servicio existente. */
   update(id: number, data: Partial<ServiceCreate>): Observable<Service> {
     return this.http.put<Service>(`${this.apiUrl}/${id}`, data);
   }
 
-  /** Habilita o deshabilita un servicio (RF-16). */
+  /** Activa o desactiva un servicio (no se borra). */
   toggleStatus(id: number): Observable<Service> {
     return this.http.patch<Service>(`${this.apiUrl}/${id}/toggle-status`, {});
   }

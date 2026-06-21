@@ -1,14 +1,24 @@
-// Rutas de la app.
-// Defino el array de rutas con loadComponent en cada una para hacer lazy
-// loading: cada pantalla queda en su propio chunk y solo se descarga
-// cuando el usuario navega ahi. Eso ayuda a que el bundle inicial pese
-// menos y la app cargue mas rapido la primera vez.
+// app.routes.ts
+// Aca defino que pantalla mostrar segun la URL. Cada objeto del array es
+// una ruta: el "path" es lo que va despues de localhost:4200/, y el
+// "loadComponent" dice que componente cargar.
+// El truco del import dinamico (loadComponent: () => import(...)) es para
+// que cada pantalla se descargue solo cuando el usuario entra a ella,
+// no toda junta al inicio. Eso hace que la app cargue mas rapido.
+//
+// Hay dos grupos de rutas:
+//  - PUBLICAS: landing, login, register (cualquiera entra).
+//  - PROTEGIDAS: todo lo que esta dentro de "/app". Para entrar tiene que
+//    estar logueado (authGuard) y para algunas ademas tiene que ser admin
+//    (adminGuard).
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
-  // Pagina de bienvenida del taller (landing publica)
+  // ---- Pantallas publicas (no necesitan login) ----
+
+  // Pagina de bienvenida del taller (la primera que ve un visitante)
   {
     path: '',
     loadComponent: () =>
@@ -16,8 +26,7 @@ export const routes: Routes = [
         (m) => m.LandingComponent,
       ),
   },
-
-  // Pantallas publicas de autenticacion
+  // Pantalla de inicio de sesion
   {
     path: 'login',
     loadComponent: () =>
@@ -25,6 +34,7 @@ export const routes: Routes = [
         (m) => m.LoginComponent,
       ),
   },
+  // Pantalla de registro de cliente nuevo
   {
     path: 'register',
     loadComponent: () =>
@@ -33,15 +43,17 @@ export const routes: Routes = [
       ),
   },
 
-  // Rutas protegidas: requieren sesion iniciada
+  // ---- Pantallas protegidas (necesitan login). Todas comparten el
+  //      layout principal (sidebar + cabecera con notificaciones) ----
   {
     path: 'app',
-    canActivate: [authGuard],
+    canActivate: [authGuard],   // si no esta logueado, el guard lo manda a /login
     loadComponent: () =>
       import('./shared/layout/main-layout.component').then(
         (m) => m.MainLayoutComponent,
       ),
     children: [
+      // Dashboard (lo ven todos los roles, contenido cambia segun el rol)
       {
         path: 'dashboard',
         loadComponent: () =>
@@ -49,6 +61,7 @@ export const routes: Routes = [
             (m) => m.DashboardComponent,
           ),
       },
+      // Mis vehiculos (cliente lista los suyos, admin ve todos)
       {
         path: 'vehicles',
         loadComponent: () =>
@@ -56,14 +69,15 @@ export const routes: Routes = [
             (m) => m.VehiclesComponent,
           ),
       },
+      // Historial de un vehiculo en concreto (lo abre con el id en la URL)
       {
-        // Historial de un vehículo específico (RF-35, RF-36).
         path: 'vehicles/:id/history',
         loadComponent: () =>
           import('./features/vehicles/pages/vehicle-history.component').then(
             (m) => m.VehicleHistoryComponent,
           ),
       },
+      // Catalogo de servicios del taller
       {
         path: 'services',
         loadComponent: () =>
@@ -71,6 +85,7 @@ export const routes: Routes = [
             (m) => m.ServicesComponent,
           ),
       },
+      // Lista de citas (cada rol ve las suyas o todas si es admin)
       {
         path: 'appointments',
         loadComponent: () =>
@@ -78,6 +93,7 @@ export const routes: Routes = [
             (m) => m.AppointmentsComponent,
           ),
       },
+      // Form para reservar una cita nueva
       {
         path: 'appointments/new',
         loadComponent: () =>
@@ -85,6 +101,7 @@ export const routes: Routes = [
             (m) => m.NewAppointmentComponent,
           ),
       },
+      // Usuarios del sistema (SOLO admin)
       {
         path: 'users',
         canActivate: [adminGuard],
@@ -93,9 +110,8 @@ export const routes: Routes = [
             (m) => m.UsersComponent,
           ),
       },
+      // Reportes y estadisticas (SOLO admin)
       {
-        // Pagina de reportes y estadisticas (RF-31, RF-32, RF-33).
-        // Solo el administrador puede acceder.
         path: 'reports',
         canActivate: [adminGuard],
         loadComponent: () =>
@@ -103,8 +119,8 @@ export const routes: Routes = [
             (m) => m.ReportsComponent,
           ),
       },
+      // Configuracion de horarios del taller (SOLO admin)
       {
-        // Configuración de horarios del taller (admin).
         path: 'schedules',
         canActivate: [adminGuard],
         loadComponent: () =>
@@ -112,18 +128,19 @@ export const routes: Routes = [
             (m) => m.SchedulesComponent,
           ),
       },
+      // Ordenes de trabajo (admin y mecanico, el cliente no entra)
       {
-        // Órdenes de trabajo (admin y mecánico).
         path: 'work-orders',
         loadComponent: () =>
           import('./features/work-orders/pages/work-orders.component').then(
             (m) => m.WorkOrdersComponent,
           ),
       },
+      // Si entra a /app sin nada mas, lo mando al dashboard
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
     ],
   },
 
-  // Cualquier ruta no encontrada vuelve a la pagina de inicio
+  // Cualquier URL que no exista vuelve a la landing
   { path: '**', redirectTo: '' },
 ];

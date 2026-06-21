@@ -1,9 +1,10 @@
-// =============================================================================
-// Componente "Historial Vehicular" (RF-35, RF-36)
-// -----------------------------------------------------------------------------
-// Muestra todos los servicios completados de un vehículo y sugiere
-// mantenimientos preventivos según kilometraje y tiempo transcurrido.
-// =============================================================================
+// vehicle-history.component.ts
+// Es la pantalla "Historial del vehiculo". Muestra:
+//   - Datos del auto (placa, marca, modelo, kilometraje).
+//   - Lista de todos los servicios completados que se le hicieron.
+//   - Sugerencias de mantenimiento que se generan en el backend segun
+//     el kilometraje actual y cuanto tiempo paso desde el ultimo servicio.
+// El id del auto viene en la URL (ej: /app/vehicles/3/history).
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -42,6 +43,8 @@ export class VehicleHistoryComponent implements OnInit {
     private historyService: VehicleHistoryService,
   ) {}
 
+  /** Cuando se carga la pantalla, agarro el id de la URL y pido al
+   *  backend el historial y las sugerencias en paralelo. */
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!id) return;
@@ -59,6 +62,7 @@ export class VehicleHistoryComponent implements OnInit {
     });
   }
 
+  /** Suma cuanto gasto en total el cliente en este auto. */
   totalSpent(): number {
     return (this.history()?.history ?? []).reduce((acc, h) => acc + h.amount, 0);
   }

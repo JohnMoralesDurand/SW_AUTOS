@@ -1,5 +1,10 @@
-// Componente de la pagina de bienvenida
-// Es la primera pantalla que ven los visitantes antes de iniciar sesion
+// landing.component.ts
+// Es la pagina de bienvenida del taller. Es la primera pantalla que ve
+// alguien que entra por primera vez, sin haber iniciado sesion. Aca
+// muestro lo que ofrecemos (texto promocional), los beneficios de usar
+// el sistema, los pasos para reservar una cita, y una vista resumida
+// del catalogo de servicios. Tambien tiene los botones para ir al login
+// o al registro.
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -43,7 +48,8 @@ export class LandingComponent implements OnInit {
   readonly gaugeIcon = Gauge;
   readonly sparklesIcon = Sparkles;
 
-  // Servicios destacados (se cargan del catalogo si esta disponible)
+  // Servicios destacados que muestro en la landing (se cargan del catalogo
+  // si esta disponible; si no, se queda vacio sin romper la pagina).
   readonly featuredServices = signal<Service[]>([]);
 
   // Beneficios que se muestran en la sección de características.
@@ -84,11 +90,12 @@ export class LandingComponent implements OnInit {
 
   constructor(private serviceCatalog: ServiceCatalogService) {}
 
+  /** Al cargar la pagina pido el catalogo publico (no necesita login)
+   *  y me quedo solo con los primeros 6 servicios para no llenar todo. */
   ngOnInit(): void {
-    // Cargamos los servicios destacados desde el endpoint publico
     this.serviceCatalog.listPublic().subscribe({
       next: (data) => this.featuredServices.set(data.slice(0, 6)),
-      error: () => this.featuredServices.set([]),
+      error: () => this.featuredServices.set([]),  // si falla, lista vacia
     });
   }
 }

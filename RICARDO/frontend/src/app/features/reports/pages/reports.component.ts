@@ -1,17 +1,13 @@
-// =============================================================================
-// Componente de la pagina "Reportes"
-// -----------------------------------------------------------------------------
-// Esta pantalla solo es accesible para el administrador (RF-31, RF-32, RF-33).
-// Permite seleccionar un rango de fechas y consultar:
-//   - Cantidad de citas agrupadas por dia (grafico de barras).
-//   - Servicios mas solicitados (grafico de barras horizontal / pastel).
-//   - Total de ingresos generados en ese rango (resumen + grafico).
-//
-// Para que sea facil de explicar:
-//   - Se usan formularios reactivos (Reactive Forms) para el rango de fechas.
-//   - Se usan signals para almacenar los datos cargados desde el backend.
-//   - Se usa ng2-charts para dibujar los graficos sobre <canvas baseChart>.
-// =============================================================================
+// reports.component.ts
+// Pantalla de "Reportes y estadisticas" (solo para el admin).
+// El admin elige un rango de fechas (Desde / Hasta) y aprieta "Aplicar"
+// para ver:
+//   - Cuantas citas hubo cada dia dentro del rango (grafico de barras).
+//   - Distribucion de los servicios mas pedidos (grafico de dona).
+//   - Cuanto ingreso genero el taller en ese periodo.
+//   - Tabla con el ranking de servicios.
+// Los datos los pide al backend a traves del ReportService y los
+// graficos los dibuja la libreria Chart.js.
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';

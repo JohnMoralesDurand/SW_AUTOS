@@ -1,14 +1,11 @@
-// =============================================================================
-// authGuard - Proteccion de rutas privadas
-// -----------------------------------------------------------------------------
-// Un "guard" es una funcion que el router Angular ejecuta antes de activar una
-// ruta. Si retorna true, la navegacion procede; si retorna false, se cancela.
+// auth.guard.ts
+// Un "guard" es un portero: el router lo llama ANTES de abrir una ruta
+// y le pregunta "¿lo dejo pasar?". Si responde true, se abre la pantalla;
+// si responde false, se cancela.
 //
-// Aqui validamos que exista una sesion iniciada (token JWT en localStorage).
-// Si no hay sesion, redirigimos al usuario a /login.
-//
-// Se aplica en app.routes.ts a todas las rutas hijas de /app.
-// =============================================================================
+// Este guard revisa que el usuario haya iniciado sesion. Si no, lo manda
+// al login. Lo uso en app.routes.ts para proteger todo el grupo /app
+// (dashboard, vehiculos, citas, etc).
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 
@@ -18,10 +15,12 @@ export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  // Si tiene sesion activa, puede entrar a la pantalla
   if (authService.isAuthenticated()) {
     return true;
   }
 
+  // Si no tiene sesion, lo mando al login y bloqueo la navegacion
   router.navigate(['/login']);
   return false;
 };

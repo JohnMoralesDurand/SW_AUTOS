@@ -1,14 +1,16 @@
-// =============================================================================
-// Componente "Órdenes de Trabajo" (RF-24 a RF-27)
-// -----------------------------------------------------------------------------
-// Permite al admin / mecánico:
-//   - Listar todas las órdenes de trabajo del taller.
-//   - Editar el diagnóstico (RF-25).
-//   - Agregar repuestos / cargos a la orden (RF-26).
-//   - Cerrar la orden (RN-13: requiere diagnóstico + al menos un ítem).
+// work-orders.component.ts
+// Pantalla de "Ordenes de trabajo". Aca el mecanico (o el admin) puede:
+//   - Ver la lista de todas las ordenes del taller.
+//   - Expandir una para ver el detalle.
+//   - Escribir o editar el diagnostico.
+//   - Agregar repuestos o cargos a la orden (el total se recalcula solo).
+//   - Subir fotos del auto (entrada / salida) como evidencia.
+//   - Cerrar la orden cuando termina el trabajo.
 //
-// Las órdenes se crean automáticamente cuando una cita pasa a "en atención".
-// =============================================================================
+// Para cerrar la orden el backend exige que tenga diagnostico y al
+// menos un item; si no, devuelve error y se muestra en la pantalla.
+// Las ordenes se crean automaticamente cuando una cita pasa al estado
+// "en atencion", asi que aca solo se trabajan, no se crean.
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';

@@ -1,12 +1,19 @@
-/* Estilos globales del sistema AutoServ */
+/* styles.css
+   Hoja de estilos global de toda la app. Lo que escriba aca se aplica
+   en cualquier pantalla. Aca cargo el tema visual de PrimeNG (verde
+   menta) y los iconos pi-*. Despues activo Tailwind con las tres
+   directivas (base / components / utilities) para poder usar sus clases
+   utilitarias en los componentes. */
 
-/* PrimeNG: tema visual de la libreria (necesario para que los componentes
-   p-table, p-button, p-dialog se rendericen correctamente).
-   Coexiste con Tailwind sin conflictos. */
+/* Tema de PrimeNG (colores, espacios y formas de los p-table, p-button,
+   p-tag, etc). Si lo quito, los componentes se ven feos sin estilos. */
 @import "primeng/resources/themes/aura-light-green/theme.css";
 @import "primeng/resources/primeng.min.css";
+
+/* Iconos pi-* (pi-pencil, pi-trash, etc) que uso en los botones */
 @import "primeicons/primeicons.css";
 
+/* Tailwind: framework de utilidades CSS (clases tipo "flex", "p-4") */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

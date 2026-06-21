@@ -1,15 +1,9 @@
-// =============================================================================
-// ServicePhotoService - Cliente HTTP para fotos de OrdenTrabajo (FotosServicio)
-// -----------------------------------------------------------------------------
-// Las fotos estan vinculadas a una orden de trabajo: el mecanico las sube
-// cuando el auto entra (estado inicial sin daños) y cuando sale (estado final).
-// Sirven como evidencia ante reclamos de clientes ("mi auto vino con un rasguño").
-//
-// Endpoints:
-//   - GET    /api/service-photos?work_order_id=X
-//   - POST   /api/service-photos/upload  (multipart con file + work_order_id)
-//   - DELETE /api/service-photos/{id}
-// =============================================================================
+// service-photo.service.ts
+// Maneja la subida y listado de fotos que el mecanico le saca al auto.
+// La idea es tener evidencia: al recibir el vehiculo se toma una foto
+// ("entrada") y al entregarlo otra ("salida"). Asi si el cliente reclama
+// despues un rasguño, hay como demostrar el estado en el que llego.
+// Cada foto esta asociada a una orden de trabajo.
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -18,11 +12,11 @@ import { environment } from '../../../environments/environment';
 
 export interface ServicePhoto {
   id: number;
-  work_order: number;
-  url_foto: string;
+  work_order: number;             // id de la orden a la que pertenece
+  url_foto: string;               // URL donde esta guardada la imagen
   descripcion: string | null;
-  tipo: string | null;          // 'entrada' | 'salida' | 'general'
-  uploaded_by: number | null;
+  tipo: string | null;            // 'entrada' / 'salida' / 'general'
+  uploaded_by: number | null;     // id del mecanico que la subio
   uploaded_at: string;
   uploaded_by_name?: string | null;
   service_name?: string | null;
@@ -32,12 +26,13 @@ export interface ServicePhoto {
 export class ServicePhotoService {
   private readonly apiUrl = `${environment.apiUrl}/service-photos`;
 
-  // Host base del backend (sin /api) para construir URLs absolutas
+  // Direccion del backend sin "/api" al final. Lo uso para construir
+  // URLs completas de las fotos cuando el backend devuelve una ruta corta.
   readonly backendHost = environment.apiUrl.replace(/\/api\/?$/, '');
 
   constructor(private http: HttpClient) {}
 
-  /** Lista las fotos de una orden de trabajo. */
+  /** Trae las fotos de una orden de trabajo. */
   list(workOrderId?: number): Observable<ServicePhoto[]> {
     const url = workOrderId !== undefined
       ? `${this.apiUrl}?work_order_id=${workOrderId}`
@@ -45,7 +40,8 @@ export class ServicePhotoService {
     return this.http.get<ServicePhoto[]>(url);
   }
 
-  /** Sube una foto a la orden indicada. */
+  /** Sube una foto al backend. Uso FormData porque tengo que mandar el
+   *  archivo binario (multipart/form-data), no JSON. */
   upload(
     workOrderId: number,
     file: File,
@@ -60,12 +56,13 @@ export class ServicePhotoService {
     return this.http.post<ServicePhoto>(`${this.apiUrl}/upload`, form);
   }
 
-  /** Elimina una foto (solo staff). */
+  /** Borra una foto (solo el mecanico o el admin). */
   delete(photoId: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${photoId}`);
   }
 
-  /** Convierte url_foto en URL absoluta (DRF ya la devuelve absoluta, esto es fallback). */
+  /** Si la URL de la foto vino sin el dominio (relativa), le pega el host
+   *  del backend para que el <img src="..."> funcione. */
   absoluteUrl(photo: ServicePhoto): string {
     if (!photo.url_foto) return '';
     return photo.url_foto.startsWith('http')

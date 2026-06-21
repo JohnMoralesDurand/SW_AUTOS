@@ -1,7 +1,10 @@
-// Config principal de la app Angular.
-// Aca registro los providers globales que necesita toda la app: el router
-// con las rutas, HttpClient para hablar con el backend Django, las
-// animaciones que requiere PrimeNG y Chart.js para los reportes.
+// app.config.ts
+// Aca activo todo lo que la app necesita para funcionar:
+//   1) El router para que las URLs lleven a la pantalla correcta.
+//   2) HttpClient para poder hablar con el backend (hacer GET, POST, etc).
+//   3) Las animaciones que requiere PrimeNG (menus, alertas, modales).
+//   4) Chart.js para que los graficos del dashboard se dibujen.
+// Cada "provide*" es como prender un servicio global de la aplicacion.
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -13,13 +16,19 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    // Router con las rutas (standalone, sin NgModule)
+    // Enciendo el sistema de rutas con las rutas que defini en app.routes.ts
     provideRouter(routes),
-    // HttpClient con el interceptor que inyecta el token JWT en cada request
+
+    // Enciendo HttpClient para llamar al backend. El "interceptor" es como
+    // un filtro que pega el token de login a cada peticion automaticamente,
+    // asi no tengo que hacerlo en cada llamada.
     provideHttpClient(withInterceptors([authInterceptor])),
-    // PrimeNG necesita animaciones para sus dialogos, dropdowns y tags
+
+    // PrimeNG no muestra sus menus / modales sin esto activado
     provideAnimations(),
-    // Chart.js: registra los controllers para los graficos del dashboard
+
+    // Chart.js: la libreria que dibuja los graficos de barras y dona del
+    // dashboard de administrador.
     provideCharts(withDefaultRegisterables()),
   ],
 };

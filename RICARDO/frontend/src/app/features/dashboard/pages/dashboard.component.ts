@@ -1,11 +1,14 @@
-// Componente del Dashboard.
-// Es la pantalla de inicio despues del login. Cambia segun el rol:
-//   - Admin: ve KPIs (citas, clientes, ingresos), graficos de tendencias y
-//     proximas citas.
+// dashboard.component.ts
+// Es la pantalla principal despues del login. Lo que se muestra depende
+// del rol del usuario:
+//   - Admin: ve numeros generales (cantidad de citas, clientes, ingresos
+//     de la semana), tres graficos (citas por dia, estado, top servicios)
+//     y sus proximas citas.
 //   - Cliente / Mecanico: solo ve sus proximas citas.
-// Tecnicamente uso signal() para el estado reactivo (Angular 17),
-// componentes standalone (sin NgModule) y ng2-charts para los graficos
-// (es un wrapper de Chart.js que se usa con <canvas baseChart>).
+//
+// Los graficos los hace una libreria llamada Chart.js, y los conecto a
+// Angular con ng2-charts. Cada grafico tiene su propia configuracion
+// (colores, escala, leyenda).
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -40,10 +43,8 @@ import { Appointment } from '../../../core/models/appointment.model';
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {
-  // ---------------------------------------------------------------------------
-  // Iconos de la libreria lucide-angular usados en la plantilla.
-  // Se exponen como propiedades para evitar referencias estaticas en el HTML.
-  // ---------------------------------------------------------------------------
+  // Iconos que uso en la plantilla del dashboard. Los expongo como
+  // propiedades para no tener que importarlos directamente en el HTML.
   readonly calendarCheckIcon = CalendarCheck;
   readonly carIcon = Car;
   readonly trendingIcon = TrendingUp;
@@ -53,20 +54,16 @@ export class DashboardComponent implements OnInit {
   readonly barChartIcon = BarChart3;
   readonly pieChartIcon = PieChart;
 
-  // ---------------------------------------------------------------------------
-  // Senales reactivas (signals) que la plantilla observa automaticamente.
-  // Cada vez que se llama a .set(...) la vista se actualiza.
-  // ---------------------------------------------------------------------------
+  // Variables reactivas con los datos que se muestran en pantalla.
+  // Cuando les hago .set(...) la pantalla se redibuja sola.
   readonly summary = signal<DashboardSummary | null>(null);
   readonly upcomingAppointments = signal<Appointment[]>([]);
   readonly topServices = signal<TopService[]>([]);
   readonly appointmentsByDay = signal<AppointmentsByDay[]>([]);
 
-  // ---------------------------------------------------------------------------
-  // Configuracion del grafico de barras: "Servicios mas solicitados".
-  // Chart.js trabaja con un objeto ChartData que contiene labels (eje X)
-  // y datasets (los valores y su estilo).
-  // ---------------------------------------------------------------------------
+  // Datos del grafico de barras "Servicios mas solicitados". Chart.js
+  // pide un objeto con "labels" (lo que va en el eje X) y "datasets"
+  // (los valores con su color).
   topServicesChart = signal<ChartData<'bar'>>({
     labels: [],
     datasets: [
@@ -79,7 +76,7 @@ export class DashboardComponent implements OnInit {
     ],
   });
 
-  // Opciones visuales del grafico de barras.
+  // Opciones de estilo del grafico de barras (sin leyenda, eje Y desde 0)
   readonly barOptions: ChartConfiguration<'bar'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -89,9 +86,7 @@ export class DashboardComponent implements OnInit {
     },
   };
 
-  // ---------------------------------------------------------------------------
-  // Configuracion del grafico de linea: "Citas por dia (ultimos 7 dias)".
-  // ---------------------------------------------------------------------------
+  // Datos del grafico de linea "Citas por dia (ultimos 7 dias)".
   appointmentsChart = signal<ChartData<'line'>>({
     labels: [],
     datasets: [
@@ -117,9 +112,7 @@ export class DashboardComponent implements OnInit {
     },
   };
 
-  // ---------------------------------------------------------------------------
-  // Configuracion del grafico de dona: "Estado de citas".
-  // ---------------------------------------------------------------------------
+  // Datos del grafico de dona "Estado de citas".
   appointmentStatusChart = signal<ChartData<'doughnut'>>({
     labels: [],
     datasets: [
@@ -144,28 +137,21 @@ export class DashboardComponent implements OnInit {
     private appointmentService: AppointmentService,
   ) {}
 
-  // ---------------------------------------------------------------------------
-  // ngOnInit: ciclo de vida que se ejecuta una vez tras crear el componente.
-  // Aqui hacemos las cargas iniciales de datos desde el backend.
-  // ---------------------------------------------------------------------------
+  /** Se ejecuta cuando se crea el componente. Aca decido que datos pido
+   *  segun el rol del usuario que esta viendo el dashboard. */
   ngOnInit(): void {
-    // Solo el administrador puede ver el resumen + graficos completos.
+    // Solo el admin puede ver los numeros generales y los graficos
     if (this.authService.isAdmin()) {
       this.loadAdminMetrics();
     }
-
-    // Todas las roles pueden ver sus citas proximas.
+    // Todos los roles ven sus proximas citas
     this.loadUpcomingAppointments();
   }
 
-  // ---------------------------------------------------------------------------
-  // Carga las metricas que solo el administrador puede ver:
-  //   - Resumen general (tarjetas)
-  //   - Top de servicios (grafico de barras)
-  //   - Citas por dia ultimos 7 dias (grafico de linea)
-  // ---------------------------------------------------------------------------
+  /** Pide los datos del backend para los 4 numeros grandes y los 3
+   *  graficos del dashboard del admin. */
   private loadAdminMetrics(): void {
-    // Resumen general (tarjetas + grafico de dona).
+    // Resumen general: cantidad de citas, clientes, ingresos
     this.reportService.getSummary().subscribe({
       next: (data) => {
         this.summary.set(data);
@@ -173,7 +159,7 @@ export class DashboardComponent implements OnInit {
       },
     });
 
-    // Top de servicios mas solicitados (RF-32).
+    // Ranking de los 5 servicios mas pedidos -> grafico de barras
     this.reportService.getTopServices(5).subscribe({
       next: (data) => {
         this.topServices.set(data);
@@ -191,10 +177,10 @@ export class DashboardComponent implements OnInit {
       },
     });
 
-    // Citas agrupadas por dia en los ultimos 7 dias (RF-31).
+    // Citas por dia en los ultimos 7 dias -> grafico de linea
     const end = new Date();
     const start = new Date();
-    start.setDate(end.getDate() - 6);
+    start.setDate(end.getDate() - 6);  // hace 6 dias atras + hoy = 7 dias
     this.reportService.getAppointmentsByPeriod(start, end).subscribe({
       next: (data) => {
         this.appointmentsByDay.set(data);
@@ -217,9 +203,8 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // Carga las proximas 5 citas del usuario (pendientes o confirmadas).
-  // ---------------------------------------------------------------------------
+  /** Pide la lista de citas y se queda con las primeras 5 que estan en
+   *  estado pendiente o confirmada (las "proximas"). */
   private loadUpcomingAppointments(): void {
     this.appointmentService.list().subscribe({
       next: (data) => {
@@ -231,9 +216,7 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // Convierte el resumen en datos para el grafico de dona de estados.
-  // ---------------------------------------------------------------------------
+  /** Convierte los numeros del resumen en los datos del grafico de dona. */
   private updateStatusChart(data: DashboardSummary): void {
     const completed = data.completed_appointments;
     const pending = data.pending_appointments;
@@ -254,9 +237,8 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ---------------------------------------------------------------------------
-  // Convierte "2026-05-09" en "Sab 09" para que el eje X sea legible.
-  // ---------------------------------------------------------------------------
+  /** Convierte una fecha tipo "2026-05-09" en algo mas corto y legible
+   *  como "Sab 09" para mostrar en el eje X del grafico. */
   private formatShortDay(isoDay: string): string {
     const date = new Date(isoDay + 'T00:00:00');
     const dayName = date.toLocaleDateString('es-PE', { weekday: 'short' });
