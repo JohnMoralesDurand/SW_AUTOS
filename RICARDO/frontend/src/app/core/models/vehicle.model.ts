@@ -6,10 +6,11 @@
 // ABC-123).
 import { z } from 'zod';
 
-// Como llega un vehiculo desde el backend
+// Como llega un vehiculo desde el backend (la relacion al dueño viene
+// como "owner" con el ID adentro, igual que la serializa Django)
 export const vehicleSchema = z.object({
   id: z.number(),
-  owner_id: z.number(),                            // id del cliente dueño del auto
+  owner: z.number(),                               // id del cliente dueño del auto
   license_plate: z.string(),
   brand: z.string(),
   model: z.string(),

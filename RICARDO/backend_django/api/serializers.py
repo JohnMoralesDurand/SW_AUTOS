@@ -33,6 +33,13 @@ class UserCreateSerializer(serializers.ModelSerializer):
     """Para registrar clientes (recibe la contrasena en texto plano)."""
 
     password = serializers.CharField(write_only=True, min_length=6)
+    # El DNI peruano son exactamente 8 digitos. Antes solo lo validaba el
+    # frontend; ahora el backend tambien lo exige (nunca hay que confiar
+    # solo en la validacion del navegador).
+    dni = serializers.RegexField(
+        regex=r'^\d{8}$',
+        error_messages={'invalid': 'El DNI debe tener exactamente 8 digitos'},
+    )
 
     class Meta:
         model = User

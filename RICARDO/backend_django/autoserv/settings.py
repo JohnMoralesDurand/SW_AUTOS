@@ -125,6 +125,9 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    # Los montos (DecimalField) se envian como numero en el JSON, no como
+    # texto, para que Angular pueda formatearlos con el pipe | number.
+    'COERCE_DECIMAL_TO_STRING': False,
 }
 
 

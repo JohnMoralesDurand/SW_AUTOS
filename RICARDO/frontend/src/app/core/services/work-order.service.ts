@@ -61,12 +61,6 @@ export class WorkOrderService {
     return this.http.get<WorkOrder[]>(this.apiUrl);
   }
 
-  /** Crea una orden vinculada a una cita (en la practica casi no se usa
-   *  porque la orden se crea sola cuando la cita pasa a "en atencion"). */
-  createForAppointment(appointmentId: number): Observable<WorkOrder> {
-    return this.http.post<WorkOrder>(this.apiUrl, { appointment_id: appointmentId });
-  }
-
   /** Guarda el diagnostico que escribio el mecanico. */
   updateDiagnosis(id: number, diagnosis: string): Observable<WorkOrder> {
     return this.http.put<WorkOrder>(`${this.apiUrl}/${id}/diagnosis`, { diagnosis });

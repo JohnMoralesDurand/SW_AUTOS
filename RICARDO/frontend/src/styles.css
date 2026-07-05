@@ -18,6 +18,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* El tema de PrimeNG intenta cargar su propia fuente "Inter var" desde
+   un archivo empaquetado que llega dañado y llenaba la consola de
+   warnings. Como ya cargamos Inter desde Google Fonts en index.html,
+   aca piso la variable del tema para que nada use "Inter var" y el
+   navegador ni intente descargarla. */
+:root {
+  --font-family: "Inter", system-ui, sans-serif;
+}
+html, body, .p-component {
+  font-family: "Inter", system-ui, sans-serif;
+}
+
 @layer base {
   html, body {
     height: 100%;

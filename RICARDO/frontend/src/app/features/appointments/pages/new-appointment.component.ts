@@ -101,9 +101,15 @@ export class NewAppointmentComponent implements OnInit {
     });
   }
 
-  /** Devuelve la fecha mínima en formato yyyy-mm-dd (hoy). */
+  /** Devuelve la fecha minima del calendario (hoy) en formato yyyy-mm-dd.
+   *  Armo la fecha con los metodos locales del navegador: si usara
+   *  toISOString() me daria la fecha en UTC, y en Peru despues de las
+   *  7 pm ya seria "mañana" en UTC y bloquearia reservar para hoy. */
   getMinDate(): string {
-    return new Date().toISOString().split('T')[0];
+    const d = new Date();
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${mes}-${dia}`;
   }
 
   /** Consulta los horarios disponibles cuando el usuario elige servicio y fecha. */

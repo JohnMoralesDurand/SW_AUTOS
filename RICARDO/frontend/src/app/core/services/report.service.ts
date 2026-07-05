@@ -16,6 +16,7 @@ export interface DashboardSummary {
   total_appointments: number;
   pending_appointments: number;
   completed_appointments: number;
+  cancelled_appointments: number;   // para separarlas en el grafico de estados
   weekly_income: number;
 }
 

@@ -203,34 +203,45 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  /** Pide la lista de citas y se queda con las primeras 5 que estan en
-   *  estado pendiente o confirmada (las "proximas"). */
+  /** Pide la lista de citas y arma las "proximas": solo pendientes o
+   *  confirmadas cuya fecha aun no paso, ordenadas de la mas cercana a
+   *  la mas lejana (antes salian al reves e incluian citas vencidas). */
   private loadUpcomingAppointments(): void {
     this.appointmentService.list().subscribe({
       next: (data) => {
+        const now = Date.now();
         const upcoming = data
-          .filter((a) => a.status === 'pending' || a.status === 'confirmed')
+          .filter(
+            (a) =>
+              (a.status === 'pending' || a.status === 'confirmed') &&
+              new Date(a.scheduled_at).getTime() >= now,
+          )
+          .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
           .slice(0, 5);
         this.upcomingAppointments.set(upcoming);
       },
     });
   }
 
-  /** Convierte los numeros del resumen en los datos del grafico de dona. */
+  /** Convierte los numeros del resumen en los datos del grafico de dona.
+   *  Las canceladas van en su propia porcion (antes se mezclaban con
+   *  las que estaban en proceso). */
   private updateStatusChart(data: DashboardSummary): void {
     const completed = data.completed_appointments;
     const pending = data.pending_appointments;
-    const others = Math.max(
+    const cancelled = data.cancelled_appointments ?? 0;
+    // "En proceso" = confirmadas + en atencion (lo que no es ninguna de las otras)
+    const inProgress = Math.max(
       0,
-      data.total_appointments - completed - pending,
+      data.total_appointments - completed - pending - cancelled,
     );
 
     this.appointmentStatusChart.set({
-      labels: ['Pendientes', 'Otras en proceso', 'Completadas'],
+      labels: ['Pendientes', 'En proceso', 'Completadas', 'Canceladas'],
       datasets: [
         {
-          data: [pending, others, completed],
-          backgroundColor: ['#fbbf24', '#0ea5e9', '#3fa06f'],
+          data: [pending, inProgress, completed, cancelled],
+          backgroundColor: ['#fbbf24', '#0ea5e9', '#3fa06f', '#ef4444'],
           borderWidth: 0,
         },
       ],

@@ -44,12 +44,23 @@
   </aside>
 
   <!-- Contenido principal -->
-  <div class="flex-1 flex flex-col">
+  <div class="flex-1 flex flex-col relative">
     <!-- Encabezado superior -->
     <header class="bg-white border-b border-mint-100 px-6 py-4 flex items-center justify-between">
-      <div>
-        <h1 class="text-lg font-semibold text-slate-800">Panel de control</h1>
-        <p class="text-xs text-slate-500">Bienvenido, {{ authService.currentUser()?.first_name }}</p>
+      <div class="flex items-center gap-3">
+        <!-- Boton hamburguesa: solo aparece en pantallas chicas, donde el
+             sidebar esta oculto. Abre el menu de navegacion movil. -->
+        <button
+          (click)="toggleMobileMenu()"
+          class="md:hidden rounded-xl bg-mint-100 p-2 text-mint-700 hover:bg-mint-200"
+          title="Menú"
+        >
+          <lucide-icon [img]="mobileMenuOpen() ? closeIcon : menuIcon" [size]="20"></lucide-icon>
+        </button>
+        <div>
+          <h1 class="text-lg font-semibold text-slate-800">Panel de control</h1>
+          <p class="text-xs text-slate-500">Bienvenido, {{ authService.currentUser()?.first_name }}</p>
+        </div>
       </div>
       <div class="flex items-center gap-3">
         <!-- Badge con el rol del usuario -->
@@ -120,6 +131,26 @@
         </div>
       </div>
     </header>
+
+    <!-- Menu de navegacion movil (se despliega bajo el header) -->
+    @if (mobileMenuOpen()) {
+      <!-- Fondo oscuro: al tocarlo se cierra el menu -->
+      <div class="fixed inset-0 z-40 bg-black/30 md:hidden" (click)="toggleMobileMenu()"></div>
+      <nav class="absolute left-0 right-0 top-[65px] z-50 border-b border-mint-100 bg-white p-3 shadow-soft md:hidden">
+        @for (item of visibleItems(); track item.path) {
+          <a
+            [routerLink]="item.path"
+            routerLinkActive="bg-mint-100 text-mint-800 font-semibold"
+            [routerLinkActiveOptions]="{ exact: false }"
+            (click)="toggleMobileMenu()"
+            class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-600 transition hover:bg-mint-50"
+          >
+            <lucide-icon [img]="item.icon" [size]="18"></lucide-icon>
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+    }
 
     <!-- Area de contenido del feature actual -->
     <main class="flex-1 p-6 overflow-auto">

@@ -21,19 +21,23 @@ export const appointmentStatusSchema = z.enum([
 
 export type AppointmentStatus = z.infer<typeof appointmentStatusSchema>;
 
-// Como llega una cita desde el backend
+// Como llega una cita desde el backend.
+// Ojo: Django serializa las relaciones con el nombre del campo tal cual
+// (client, vehicle, service, mechanic) y trae el ID adentro. Antes aca
+// decian client_id / mechanic_id y no coincidian con la respuesta real.
 export const appointmentSchema = z.object({
   id: z.number(),
-  client_id: z.number(),
-  vehicle_id: z.number(),
-  service_id: z.number(),
-  mechanic_id: z.number().nullable().optional(),  // empieza null hasta que el admin asigne uno
+  client: z.number(),
+  vehicle: z.number(),
+  service: z.number(),
+  mechanic: z.number().nullable().optional(),     // empieza null hasta que el admin asigne uno
   scheduled_at: z.string(),                       // fecha y hora ISO
   duration_minutes: z.number(),
   frozen_price: z.number(),                       // precio del servicio al momento de reservar
   notes: z.string().nullable().optional(),
   status: appointmentStatusSchema,
   cancellation_reason: z.string().nullable().optional(),
+  is_late_cancellation: z.boolean().optional(),   // true si cancelo con <3h de anticipacion
   created_at: z.string(),
   // Estos son los nombres legibles que el backend ya resuelve por mi para
   // no tener que hacer mas peticiones por cada cita.

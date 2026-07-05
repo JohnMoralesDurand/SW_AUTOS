@@ -227,14 +227,4 @@ export class UsersComponent implements OnInit {
     };
     return map[role] ?? role;
   }
-
-  /** Estilos del badge segun el rol. */
-  getRoleClass(role: string): string {
-    const map: Record<string, string> = {
-      client: 'badge-info',
-      mechanic: 'badge-success',
-      admin: 'badge-warning',
-    };
-    return map[role] ?? 'badge-muted';
-  }
 }

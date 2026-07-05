@@ -191,7 +191,10 @@ export class AppointmentsComponent implements OnInit {
   // ---------------------------------------------------------------------------
   openAssignModal(appointment: Appointment): void {
     this.modalAppointment.set(appointment);
-    this.selectedMechanic.set(appointment.mechanic_id ?? 0);
+    // Preselecciono el mecanico que ya tiene asignado (si tiene). El
+    // backend manda este campo como "mechanic"; antes se leia mechanic_id
+    // (no existia) y el dropdown nunca preseleccionaba nada.
+    this.selectedMechanic.set(appointment.mechanic ?? 0);
     this.modalError.set(null);
     this.mechanics.set([]);
     // Cargamos sólo los mecánicos cuya especialidad coincide con la categoría

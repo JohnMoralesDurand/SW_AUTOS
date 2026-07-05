@@ -30,9 +30,12 @@ export class VehicleService {
     return this.http.post<Vehicle>(this.apiUrl, data);
   }
 
-  /** Actualiza datos del vehiculo (la placa no se puede cambiar). */
+  /** Actualiza datos del vehiculo (la placa no se puede cambiar).
+   *  Uso PATCH y no PUT: PATCH actualiza solo los campos que mando,
+   *  mientras que PUT exige mandar TODOS los campos (incluida la placa,
+   *  que justamente no enviamos al editar) y devolvia error 400. */
   update(id: number, data: Partial<VehicleCreate>): Observable<Vehicle> {
-    return this.http.put<Vehicle>(`${this.apiUrl}/${id}`, data);
+    return this.http.patch<Vehicle>(`${this.apiUrl}/${id}`, data);
   }
 
   /** "Elimina" el vehiculo: en realidad lo marca como inactivo, no se

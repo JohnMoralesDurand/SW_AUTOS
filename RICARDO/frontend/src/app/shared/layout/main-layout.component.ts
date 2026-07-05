@@ -28,6 +28,8 @@ import {
   Clock,
   ClipboardList,
   CheckCircle,
+  Menu,
+  X,
 } from 'lucide-angular';
 
 import { AuthService } from '../../core/services/auth.service';
@@ -61,9 +63,15 @@ export class MainLayoutComponent implements OnInit {
   readonly bellIcon = Bell;
   readonly reportsIcon = BarChart3;
   readonly checkIcon = CheckCircle;
+  readonly menuIcon = Menu;
+  readonly closeIcon = X;
 
   // Controla si la lista de notificaciones esta abierta o cerrada
   readonly notificationsOpen = signal(false);
+
+  // Controla el menu hamburguesa en pantallas chicas (el sidebar normal
+  // se oculta en movil, asi que ahi la navegacion sale de este menu)
+  readonly mobileMenuOpen = signal(false);
 
   // Definicion del menu. Si un item tiene "roles", solo se muestra a esos
   // roles; si no tiene, lo ven todos.
@@ -109,6 +117,11 @@ export class MainLayoutComponent implements OnInit {
   markRead(notification: Notification): void {
     if (notification.is_read) return;  // si ya estaba leida, no hago nada
     this.notificationService.markAsRead(notification.id).subscribe();
+  }
+
+  /** Abre/cierra el menu de navegacion en celulares. */
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen.update((v) => !v);
   }
 
   /** Cierra la sesion (delegado al AuthService). */

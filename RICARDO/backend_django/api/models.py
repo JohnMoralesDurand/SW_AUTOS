@@ -112,7 +112,9 @@ class Service(models.Model):
     description = models.TextField(blank=True, null=True)
     category = models.CharField(max_length=60, blank=True, null=True)
     duration_minutes = models.IntegerField(default=60)
-    price = models.FloatField(default=0.0)
+    # DecimalField para dinero: los float acumulan errores de redondeo
+    # (0.1 + 0.2 = 0.30000000000000004); Decimal guarda el monto exacto.
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -155,7 +157,9 @@ class Appointment(models.Model):
 
     scheduled_at = models.DateTimeField(db_index=True)
     duration_minutes = models.IntegerField()
-    frozen_price = models.FloatField()
+    # Precio "congelado" al momento de reservar (si el catalogo sube de
+    # precio despues, al cliente se le respeta este monto)
+    frozen_price = models.DecimalField(max_digits=10, decimal_places=2)
     notes = models.TextField(blank=True, null=True)
 
     status = models.CharField(
@@ -164,7 +168,8 @@ class Appointment(models.Model):
         default=AppointmentStatus.PENDING,
     )
     cancellation_reason = models.CharField(max_length=255, blank=True, null=True)
-    is_late_cancellation = models.CharField(max_length=5, default='false')
+    # True si el cliente cancelo con menos de 3 horas de anticipacion
+    is_late_cancellation = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -184,7 +189,7 @@ class WorkOrder(models.Model):
         Appointment, on_delete=models.CASCADE, related_name='work_order',
     )
     diagnosis = models.TextField(blank=True, null=True)
-    total_amount = models.FloatField(default=0.0)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     status = models.CharField(
         max_length=10, choices=WorkOrderStatus.choices, default=WorkOrderStatus.OPEN,
     )
@@ -207,7 +212,7 @@ class WorkOrderItem(models.Model):
     )
     description = models.CharField(max_length=150)
     quantity = models.IntegerField(default=1)
-    unit_price = models.FloatField(default=0.0)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     class Meta:
         db_table = 'work_order_items'

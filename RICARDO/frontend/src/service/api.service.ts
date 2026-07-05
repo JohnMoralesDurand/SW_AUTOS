@@ -17,6 +17,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+import { environment } from '../environments/environment';
 import { usuario } from '../model/usuario.model';
 import { vehiculo } from '../model/vehiculo.model';
 import { servicio } from '../model/servicio.model';
@@ -28,8 +29,9 @@ import { ordentrabajo } from '../model/ordentrabajo.model';
 })
 export class ApiService {
 
-  // URL del backend Django (puerto 8001, igual que tiene environment.ts)
-  private apiUrl = 'http://127.0.0.1:8001/api/';
+  // URL del backend tomada de environment.ts: si el backend cambia de
+  // puerto o dominio se corrige en un solo lugar para toda la app
+  private apiUrl = environment.apiUrl + '/';
 
   constructor(private cliente: HttpClient) { }
 

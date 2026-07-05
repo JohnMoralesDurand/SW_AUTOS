@@ -26,7 +26,9 @@
     </div>
   }
 
-  <!-- Tabla de dias configurables (p-table de PrimeNG) -->
+  <!-- Tabla de dias (p-table de PrimeNG). Cada dia puede tener varios
+       bloques de atencion: se agregan con "+ Bloque" y se quitan con el
+       tachito. Ideal para horario partido (manana y tarde). -->
   <p-table [value]="schedule()" [tableStyle]="{ 'min-width': '50rem' }"
            styleClass="p-datatable-sm">
     <ng-template pTemplate="header">
@@ -34,8 +36,7 @@
         <th>Dia</th>
         <th class="text-center">Estado</th>
         <th class="text-center">Abierto</th>
-        <th>Apertura</th>
-        <th>Cierre</th>
+        <th>Bloques de atencion</th>
         <th class="text-right">Accion</th>
       </tr>
     </ng-template>
@@ -51,12 +52,30 @@
           <p-inputSwitch [(ngModel)]="day.is_open"/>
         </td>
         <td>
-          <input type="time" pInputText [(ngModel)]="day.open_time"
-                 [disabled]="!day.is_open" class="w-full"/>
-        </td>
-        <td>
-          <input type="time" pInputText [(ngModel)]="day.close_time"
-                 [disabled]="!day.is_open" class="w-full"/>
+          <!-- Una fila por cada bloque del dia -->
+          <div class="space-y-2">
+            @for (bloque of day.bloques; let i = $index; track i) {
+              <div class="flex items-center gap-2">
+                <input type="time" pInputText [(ngModel)]="bloque.open_time"
+                       [disabled]="!day.is_open" class="w-28"/>
+                <span class="text-slate-400">a</span>
+                <input type="time" pInputText [(ngModel)]="bloque.close_time"
+                       [disabled]="!day.is_open" class="w-28"/>
+                @if (day.bloques.length > 1) {
+                  <p-button icon="pi pi-trash" severity="danger"
+                            [rounded]="true" [text]="true"
+                            pTooltip="Quitar este bloque"
+                            [disabled]="!day.is_open"
+                            (click)="removeBlock(day, i)"/>
+                }
+              </div>
+            }
+            <p-button label="Bloque" icon="pi pi-plus" severity="secondary"
+                      [outlined]="true" size="small"
+                      pTooltip="Agregar otro bloque (ej: turno tarde)"
+                      [disabled]="!day.is_open"
+                      (click)="addBlock(day)"/>
+          </div>
         </td>
         <td class="text-right">
           <p-button [label]="savingDay() === day.day_of_week ? 'Guardando...' : 'Guardar'"
@@ -71,5 +90,7 @@
   <p class="text-xs text-slate-500">
     <strong>Nota:</strong> Los cambios afectan inmediatamente a las nuevas reservas.
     Las citas ya programadas se mantienen aunque el horario cambie.
+    Un dia puede tener varios bloques (ej: 08:00-12:00 y 14:00-18:00 con
+    pausa de almuerzo); las citas solo se reservan dentro de los bloques.
   </p>
 </div>

@@ -14,6 +14,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { adminGuard } from './core/guards/admin.guard';
+import { staffGuard } from './core/guards/staff.guard';
 
 export const routes: Routes = [
   // ---- Pantallas publicas (no necesitan login) ----
@@ -131,6 +132,7 @@ export const routes: Routes = [
       // Ordenes de trabajo (admin y mecanico, el cliente no entra)
       {
         path: 'work-orders',
+        canActivate: [staffGuard],
         loadComponent: () =>
           import('./features/work-orders/pages/work-orders.component').then(
             (m) => m.WorkOrdersComponent,

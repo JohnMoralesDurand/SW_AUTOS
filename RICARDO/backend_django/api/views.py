@@ -5,7 +5,9 @@
 # orden, asignacion de mecanico, etc.) agrego acciones extras con el
 # decorador @action.
 from datetime import datetime, time, timedelta
+from decimal import Decimal, InvalidOperation
 
+from django.db import IntegrityError
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action, api_view, permission_classes
@@ -56,7 +58,13 @@ class RegisterView(APIView):
             return Response({'detail': 'El DNI ya se encuentra registrado'}, status=400)
         if User.objects.filter(email=data.get('email')).exists():
             return Response({'detail': 'El correo ya se encuentra registrado'}, status=400)
-        user = serializer.save()
+        # El try/except cubre el caso raro de dos registros simultaneos con
+        # el mismo correo/DNI: el segundo choca contra el UNIQUE de la BD y
+        # devolvemos un 400 claro en vez de un error 500.
+        try:
+            user = serializer.save()
+        except IntegrityError:
+            return Response({'detail': 'El DNI o correo ya se encuentra registrado'}, status=400)
         return Response(UserSerializer(user).data, status=201)
 
 
@@ -74,10 +82,13 @@ class LoginView(APIView):
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             return Response({'detail': 'Correo o contrasena incorrectos'}, status=401)
-        if not user.is_active:
-            return Response({'detail': 'Usuario desactivado'}, status=401)
+        # Primero valido la contrasena y recien despues reviso si esta
+        # desactivado. Si dijera "usuario desactivado" sin pedir la clave,
+        # cualquiera podria probar correos para descubrir cuentas existentes.
         if not user.check_password(password):
             return Response({'detail': 'Correo o contrasena incorrectos'}, status=401)
+        if not user.is_active:
+            return Response({'detail': 'Usuario desactivado'}, status=401)
         return Response({
             'access_token': create_access_token(user),
             'token_type': 'bearer',
@@ -125,7 +136,10 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'El DNI ya se encuentra registrado'}, status=400)
         if User.objects.filter(email=data.get('email')).exists():
             return Response({'detail': 'El correo ya se encuentra registrado'}, status=400)
-        user = serializer.save()
+        try:
+            user = serializer.save()
+        except IntegrityError:
+            return Response({'detail': 'El DNI o correo ya se encuentra registrado'}, status=400)
         return Response(UserSerializer(user).data, status=201)
 
     @action(detail=True, methods=['patch'], url_path='toggle-status', permission_classes=[IsAdmin])
@@ -135,6 +149,11 @@ class UserViewSet(viewsets.ModelViewSet):
         user.is_active = not user.is_active
         user.save()
         return Response(UserSerializer(user).data)
+
+    def destroy(self, request, *args, **kwargs):
+        # En este sistema los usuarios no se borran fisicamente (se
+        # perderia el historial de citas). Se desactivan con toggle-status.
+        return Response({'detail': 'Los usuarios no se eliminan, se desactivan'}, status=405)
 
 
 # =============================================================================
@@ -210,6 +229,11 @@ class ServiceViewSet(viewsets.ModelViewSet):
         service.save()
         return Response(ServiceSerializer(service).data)
 
+    def destroy(self, request, *args, **kwargs):
+        # Los servicios tampoco se borran fisico (las citas viejas los
+        # referencian). Se desactivan con toggle-status.
+        return Response({'detail': 'Los servicios no se eliminan, se desactivan'}, status=405)
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -254,13 +278,20 @@ def _get_day_hours(day_of_week: int):
 
 
 def _parse_dt(value):
+    """Convierte el texto ISO que manda el frontend en un datetime.
+
+    Importante: el navegador suele mandar la hora en UTC (termina en Z).
+    Aca la convierto SIEMPRE a la hora local del taller (America/Lima)
+    para que las validaciones de horario comparen contra la hora real
+    de atencion y no contra la hora UTC (que va 5 horas adelantada).
+    """
     if not value:
         return None
     try:
         dt = datetime.fromisoformat(value.replace('Z', '+00:00'))
         if dt.tzinfo is None:
             dt = timezone.make_aware(dt)
-        return dt
+        return timezone.localtime(dt)
     except (ValueError, AttributeError):
         return None
 
@@ -349,6 +380,20 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             qs = qs.filter(status=sf)
         return qs.order_by('-scheduled_at')
 
+    # Bloqueo los endpoints genericos de edicion/borrado que regala el
+    # ModelViewSet: si quedaran abiertos, alguien podria cambiar la fecha
+    # de su cita sin pasar por las validaciones de horario, o borrarla
+    # fisicamente. Las unicas formas validas de modificar una cita son
+    # las acciones de abajo (confirm, cancel, reschedule, etc).
+    def update(self, request, *args, **kwargs):
+        return Response({'detail': 'Use las acciones especificas (cancel, reschedule, etc.)'}, status=405)
+
+    def partial_update(self, request, *args, **kwargs):
+        return Response({'detail': 'Use las acciones especificas (cancel, reschedule, etc.)'}, status=405)
+
+    def destroy(self, request, *args, **kwargs):
+        return Response({'detail': 'Las citas no se eliminan, se cancelan'}, status=405)
+
     def create(self, request, *args, **kwargs):
         """Reserva una nueva cita (RF-18)."""
         user = request.user
@@ -424,7 +469,8 @@ class AppointmentViewSet(viewsets.ModelViewSet):
         hours_left = (ap.scheduled_at - timezone.now()).total_seconds() / 3600
         ap.status = AppointmentStatus.CANCELLED
         ap.cancellation_reason = reason
-        ap.is_late_cancellation = 'true' if hours_left < CANCEL_GRACE_HOURS else 'false'
+        # Cancelacion tardia = con menos de 3 horas de anticipacion
+        ap.is_late_cancellation = hours_left < CANCEL_GRACE_HOURS
         ap.save()
         return Response(AppointmentSerializer(ap).data)
 
@@ -448,6 +494,9 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             if err:
                 return Response({'detail': err}, status=400)
         ap.scheduled_at = new_date
+        # Actualizo tambien el bloque horario: si la cita cambio de dia u
+        # hora, debe apuntar al bloque de la nueva fecha, no al viejo.
+        ap.dia_bloque = _get_dia_bloque_for(new_date)
         ap.save()
         return Response(AppointmentSerializer(ap).data)
 
@@ -492,7 +541,14 @@ class AppointmentViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def appointment_availability(request):
-    """Slots disponibles para un servicio en una fecha (RF-17)."""
+    """Slots disponibles para un servicio en una fecha (RF-17).
+
+    Genera los horarios BLOQUE POR BLOQUE. Antes se generaban desde la
+    apertura del primer bloque hasta el cierre del ultimo, lo que ofrecia
+    horas del hueco del almuerzo en dias con horario partido (8-12 y
+    14-18) que despues la reserva rechazaba. Ahora la pantalla y la
+    validacion usan exactamente los mismos bloques.
+    """
     try:
         service = Service.objects.get(id=request.query_params.get('service_id'), is_active=True)
     except (Service.DoesNotExist, ValueError, TypeError):
@@ -500,31 +556,38 @@ def appointment_availability(request):
     target_date = _parse_dt(request.query_params.get('date'))
     if target_date is None:
         return Response({'detail': 'Fecha invalida'}, status=400)
+
     weekday = target_date.weekday()
-    is_open, open_t, close_t = _get_day_hours(weekday)
-    if not is_open:
+    is_open, bloques = _get_day_blocks(weekday)
+    if not is_open or not bloques:
         return Response([])
-    open_dt = datetime.combine(target_date.date(), open_t, tzinfo=target_date.tzinfo)
-    close_dt = datetime.combine(target_date.date(), close_t, tzinfo=target_date.tzinfo)
+
+    # Citas activas de ese dia (para marcar los horarios ya ocupados)
     day_aps = Appointment.objects.filter(
-        scheduled_at__gte=open_dt,
-        scheduled_at__lt=close_dt + timedelta(days=1),
+        scheduled_at__date=target_date.date(),
         status__in=[AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS],
     )
+
     slots = []
-    cursor = open_dt
-    while cursor + timedelta(minutes=service.duration_minutes) <= close_dt:
-        end = cursor + timedelta(minutes=service.duration_minutes)
-        is_free = True
-        for ap in day_aps:
-            ap_end = ap.scheduled_at + timedelta(minutes=ap.duration_minutes)
-            if cursor < ap_end and ap.scheduled_at < end:
+    now = timezone.now()
+    for open_t, close_t, _db in bloques:
+        open_dt = datetime.combine(target_date.date(), open_t, tzinfo=target_date.tzinfo)
+        close_dt = datetime.combine(target_date.date(), close_t, tzinfo=target_date.tzinfo)
+        cursor = open_dt
+        # El servicio completo debe caber dentro del bloque
+        while cursor + timedelta(minutes=service.duration_minutes) <= close_dt:
+            end = cursor + timedelta(minutes=service.duration_minutes)
+            is_free = True
+            for ap in day_aps:
+                ap_end = ap.scheduled_at + timedelta(minutes=ap.duration_minutes)
+                if cursor < ap_end and ap.scheduled_at < end:
+                    is_free = False
+                    break
+            # Tampoco se puede reservar con menos de 2 horas de anticipacion
+            if cursor - now < timedelta(hours=MIN_HOURS_AHEAD):
                 is_free = False
-                break
-        if cursor - timezone.now() < timedelta(hours=MIN_HOURS_AHEAD):
-            is_free = False
-        slots.append({'start': cursor.isoformat(), 'end': end.isoformat(), 'available': is_free})
-        cursor += timedelta(minutes=SLOT_INTERVAL_MINUTES)
+            slots.append({'start': cursor.isoformat(), 'end': end.isoformat(), 'available': is_free})
+            cursor += timedelta(minutes=SLOT_INTERVAL_MINUTES)
     return Response(slots)
 
 
@@ -532,7 +595,7 @@ def appointment_availability(request):
 # WORK ORDERS
 # =============================================================================
 class WorkOrderViewSet(viewsets.ModelViewSet):
-    """Ordenes de trabajo (mecanico solo ve las suyas)."""
+    """Ordenes de trabajo (mecanico solo ve y trabaja las suyas)."""
 
     serializer_class = WorkOrderSerializer
 
@@ -542,25 +605,61 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         return [IsStaff()]
 
     def get_queryset(self):
-        return WorkOrder.objects.all()
+        """El mecanico solo alcanza SUS ordenes; el admin todas.
+
+        Este filtro aplica tambien a las acciones de detalle (diagnosis,
+        items, close): si un mecanico intenta tocar la orden de otro por
+        el ID, get_object() no la encuentra y responde 404.
+        """
+        # select_related/prefetch_related: traigo de una sola consulta los
+        # datos relacionados que el serializer necesita (evita el problema
+        # de hacer una consulta extra por cada orden de la lista).
+        qs = WorkOrder.objects.select_related(
+            'appointment__client', 'appointment__mechanic',
+            'appointment__service', 'appointment__vehicle',
+        ).prefetch_related('items', 'photos')
+        user = self.request.user
+        if getattr(user, 'role', None) == UserRole.MECHANIC:
+            qs = qs.filter(appointment__mechanic=user)
+        return qs
+
+    # Bloqueo los endpoints genericos del ModelViewSet: si quedaran
+    # abiertos, un PUT podria marcar la orden como cerrada saltandose la
+    # regla de "cierre solo con diagnostico + items". Todo se maneja con
+    # las acciones especificas de abajo.
+    def create(self, request, *args, **kwargs):
+        return Response({'detail': 'Las ordenes se crean automaticamente al iniciar la atencion'}, status=405)
+
+    def update(self, request, *args, **kwargs):
+        return Response({'detail': 'Use las acciones especificas (diagnosis, items, close)'}, status=405)
+
+    def partial_update(self, request, *args, **kwargs):
+        return Response({'detail': 'Use las acciones especificas (diagnosis, items, close)'}, status=405)
+
+    def destroy(self, request, *args, **kwargs):
+        return Response({'detail': 'Las ordenes de trabajo no se eliminan'}, status=405)
 
     def list(self, request, *args, **kwargs):
-        user = request.user
-        qs = WorkOrder.objects.all()
-        if user.role == UserRole.MECHANIC:
-            qs = qs.filter(appointment__mechanic=user)
-        chronological = list(qs.order_by('created_at'))
-        sequence = {wo.id: idx + 1 for idx, wo in enumerate(chronological)}
-        result = sorted(chronological, key=lambda w: w.created_at, reverse=True)
+        # La numeracion (Orden #1, #2...) se calcula sobre TODAS las
+        # ordenes del taller en orden de creacion, no solo las del que
+        # mira. Asi el mecanico y el admin ven el mismo numero para la
+        # misma orden.
+        all_ids = list(WorkOrder.objects.order_by('created_at').values_list('id', flat=True))
+        sequence = {wo_id: idx + 1 for idx, wo_id in enumerate(all_ids)}
+
+        qs = self.get_queryset().order_by('-created_at')
         data = []
-        for wo in result:
-            wo.display_number = sequence[wo.id]
+        for wo in qs:
+            wo.display_number = sequence.get(wo.id)
             data.append(WorkOrderSerializer(wo, context={'request': request}).data)
         return Response(data)
 
     @action(detail=True, methods=['put'], url_path='diagnosis')
     def update_diagnosis(self, request, pk=None):
         wo = self.get_object()
+        # Una orden cerrada ya es un documento final: no se puede editar
+        if wo.status == WorkOrderStatus.CLOSED:
+            return Response({'detail': 'La orden ya esta cerrada, no se puede editar'}, status=400)
         wo.diagnosis = request.data.get('diagnosis', wo.diagnosis)
         wo.save()
         return Response(WorkOrderSerializer(wo, context={'request': request}).data)
@@ -570,11 +669,27 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         wo = self.get_object()
         if wo.status == WorkOrderStatus.CLOSED:
             return Response({'detail': 'La orden ya esta cerrada'}, status=400)
+
+        # Valido los datos antes de guardar: sin esto una cantidad no
+        # numerica daba error 500 y un precio negativo se aceptaba.
+        description = str(request.data.get('description', '')).strip()
+        if not description:
+            return Response({'detail': 'La descripcion es obligatoria'}, status=400)
+        try:
+            quantity = int(request.data.get('quantity', 1))
+            unit_price = Decimal(str(request.data.get('unit_price', 0)))
+        except (ValueError, TypeError, InvalidOperation):
+            return Response({'detail': 'Cantidad o precio invalidos'}, status=400)
+        if quantity < 1:
+            return Response({'detail': 'La cantidad debe ser al menos 1'}, status=400)
+        if unit_price < 0:
+            return Response({'detail': 'El precio no puede ser negativo'}, status=400)
+
         WorkOrderItem.objects.create(
             work_order=wo,
-            description=request.data.get('description', ''),
-            quantity=request.data.get('quantity', 1),
-            unit_price=request.data.get('unit_price', 0),
+            description=description,
+            quantity=quantity,
+            unit_price=unit_price,
         )
         items_total = sum(i.quantity * i.unit_price for i in wo.items.all())
         wo.total_amount = wo.appointment.frozen_price + items_total
@@ -583,8 +698,12 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def close(self, request, pk=None):
-        """RN-13: cierre obligatorio con diagnostico + items."""
+        """Cierre obligatorio con diagnostico + items."""
         wo = self.get_object()
+        # Evito el doble cierre: un segundo POST re-cerraba la orden y
+        # mandaba la notificacion duplicada al cliente.
+        if wo.status == WorkOrderStatus.CLOSED:
+            return Response({'detail': 'La orden ya esta cerrada'}, status=400)
         if not wo.diagnosis:
             return Response({'detail': 'Falta registrar el diagnostico'}, status=400)
         if not wo.items.exists():
@@ -616,7 +735,11 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         except WorkOrder.DoesNotExist:
             return Response({'detail': 'Orden no encontrada'}, status=404)
         user = request.user
+        # Cada rol solo accede a lo suyo: el cliente a las ordenes de sus
+        # citas y el mecanico a las ordenes que tiene asignadas.
         if user.role == UserRole.CLIENT and wo.appointment.client_id != user.id:
+            return Response({'detail': 'No tiene acceso a esta orden'}, status=403)
+        if user.role == UserRole.MECHANIC and wo.appointment.mechanic_id != user.id:
             return Response({'detail': 'No tiene acceso a esta orden'}, status=403)
         return Response(WorkOrderSerializer(wo, context={'request': request}).data)
 
@@ -630,6 +753,21 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+
+    # Las notificaciones las crea SOLO el sistema (al reservar una cita,
+    # al cerrar una orden, etc). Si dejara abierto el POST generico,
+    # cualquier usuario podria fabricar notificaciones a nombre de otro.
+    def create(self, request, *args, **kwargs):
+        return Response({'detail': 'Las notificaciones las genera el sistema'}, status=405)
+
+    def update(self, request, *args, **kwargs):
+        return Response({'detail': 'Solo se puede marcar como leida'}, status=405)
+
+    def partial_update(self, request, *args, **kwargs):
+        return Response({'detail': 'Solo se puede marcar como leida'}, status=405)
+
+    def destroy(self, request, *args, **kwargs):
+        return Response({'detail': 'Las notificaciones no se eliminan'}, status=405)
 
     @action(detail=True, methods=['patch'], url_path='read')
     def mark_read(self, request, pk=None):
@@ -754,6 +892,19 @@ class ServicePhotoViewSet(viewsets.ModelViewSet):
             qs = qs.filter(work_order__appointment__client=user)
         return qs.order_by('-uploaded_at')
 
+    def destroy(self, request, *args, **kwargs):
+        """Borra una foto. El mecanico solo puede borrar fotos de SUS
+        ordenes (misma regla que al subir); el admin puede borrar
+        cualquiera."""
+        photo = self.get_object()
+        if request.user.role == UserRole.MECHANIC:
+            if photo.work_order.appointment.mechanic_id != request.user.id:
+                return Response(
+                    {'detail': 'Solo puedes eliminar fotos de tus propias ordenes'},
+                    status=403,
+                )
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=False, methods=['post'], permission_classes=[IsStaff],
             parser_classes=[MultiPartParser, FormParser])
     def upload(self, request):
@@ -804,6 +955,7 @@ def reports_summary(request):
     total_appointments = Appointment.objects.count()
     pending = Appointment.objects.filter(status=AppointmentStatus.PENDING).count()
     completed = Appointment.objects.filter(status=AppointmentStatus.COMPLETED).count()
+    cancelled = Appointment.objects.filter(status=AppointmentStatus.CANCELLED).count()
     today = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
     week_ago = today - timedelta(days=7)
     weekly = WorkOrder.objects.filter(
@@ -815,6 +967,9 @@ def reports_summary(request):
         'total_appointments': total_appointments,
         'pending_appointments': pending,
         'completed_appointments': completed,
+        # Las canceladas van aparte para que el grafico de estados del
+        # dashboard no las mezcle con las que estan en proceso.
+        'cancelled_appointments': cancelled,
         'weekly_income': sum(weekly),
     })
 
@@ -842,7 +997,12 @@ def reports_appointments(request):
 @permission_classes([IsAdmin])
 def reports_top_services(request):
     from django.db.models import Count
-    limit = int(request.query_params.get('limit', 5))
+    # Si mandan ?limit=abc no reviento con error 500: uso el valor por defecto
+    try:
+        limit = int(request.query_params.get('limit', 5))
+    except (ValueError, TypeError):
+        limit = 5
+    limit = max(1, min(limit, 50))
     rows = Service.objects.annotate(total=Count('appointment')).order_by('-total')[:limit]
     return Response([{'service': s.name, 'total': s.total} for s in rows])
 
