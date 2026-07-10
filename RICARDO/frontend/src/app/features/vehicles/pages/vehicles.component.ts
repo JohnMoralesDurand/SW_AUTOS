@@ -16,12 +16,17 @@ import {
   Pencil,
 } from 'lucide-angular';
 
-// PrimeNG: tabla, botones, inputs, tag y tooltip de los botones de accion
+// PrimeNG: tabla, botones, inputs, tag y tooltip de los botones de accion.
+// ConfirmDialog y Toast son para confirmar antes de eliminar y avisar con
+// un mensajito flotante despues de cada accion.
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { VehicleService } from '../../../core/services/vehicle.service';
 import { Vehicle } from '../../../core/models/vehicle.model';
@@ -34,8 +39,12 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
   imports: [
     CommonModule, ReactiveFormsModule, RouterLink, LucideAngularModule,
     TableModule, ButtonModule, InputTextModule, TagModule, TooltipModule,
+    ConfirmDialogModule, ToastModule,
   ],
   templateUrl: './vehicles.component.html',
+  // Cada componente que usa el dialogo de confirmacion y el toast necesita
+  // declarar estos dos services como providers
+  providers: [ConfirmationService, MessageService],
 })
 export class VehiclesComponent implements OnInit {
   // Iconos
@@ -74,6 +83,8 @@ export class VehiclesComponent implements OnInit {
     private fb: FormBuilder,
     private vehicleService: VehicleService,
     public authService: AuthService,
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService,
   ) {}
 
   ngOnInit(): void {
@@ -184,6 +195,12 @@ export class VehiclesComponent implements OnInit {
           this.loading.set(false);
           this.closeForm();
           this.loadVehicles();
+          // Aviso flotante de exito
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Confirmación',
+            detail: 'El vehículo se ha actualizado correctamente',
+          });
         },
         error: (err) => {
           this.loading.set(false);
@@ -199,6 +216,11 @@ export class VehiclesComponent implements OnInit {
           this.loading.set(false);
           this.closeForm();
           this.loadVehicles();
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Confirmación',
+            detail: 'El vehículo se ha registrado correctamente',
+          });
         },
         error: (err) => {
           this.loading.set(false);
@@ -210,12 +232,45 @@ export class VehiclesComponent implements OnInit {
     }
   }
 
-  /** Elimina (desactiva) un vehículo. */
+  /** Elimina (desactiva) un vehiculo. Primero pide confirmacion con el
+   *  dialogo de PrimeNG (antes se usaba el confirm() feo del navegador). */
   onDelete(vehicle: Vehicle): void {
-    if (!confirm(`¿Está seguro de eliminar el vehículo ${vehicle.license_plate}?`)) return;
-    this.vehicleService.remove(vehicle.id).subscribe({
-      next: () => this.loadVehicles(),
-      error: (err) => alert(extractErrorMessage(err, 'No se pudo eliminar el vehículo.')),
+    this.confirmationService.confirm({
+      message: `¿Está seguro que desea eliminar el vehículo ${vehicle.license_plate}?`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
+      accept: () => {
+        this.vehicleService.remove(vehicle.id).subscribe({
+          next: () => {
+            this.loadVehicles();
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Confirmación',
+              detail: 'El vehículo se ha eliminado correctamente',
+            });
+          },
+          error: (err) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: extractErrorMessage(err, 'No se pudo eliminar el vehículo.'),
+            });
+          },
+        });
+      },
+      reject: () => {
+        // Si cancela, solo aviso que no se hizo nada
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Cancelado',
+          detail: 'El vehículo no se ha eliminado',
+          life: 3000,
+        });
+      },
     });
   }
 }

@@ -1,4 +1,8 @@
 <!-- Plantilla del feature de Órdenes de Trabajo -->
+<!-- Dialogo de confirmacion y toast (avisos flotantes) de PrimeNG -->
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>
+
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
@@ -171,11 +175,21 @@
                   <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                     <div>
                       <label class="form-label">Imagen <span class="text-red-500">*</span></label>
-                      <input
-                        type="file"
+                      <!-- p-fileupload de PrimeNG en modo basico: un solo boton
+                           para elegir el archivo. customUpload + uploadHandler
+                           hace que en vez de subirlo solo, nos pase el archivo
+                           al componente para procesarlo nosotros. -->
+                      <p-fileUpload
+                        #fotoPicker
+                        mode="basic"
+                        name="foto"
+                        chooseIcon="pi pi-image"
+                        chooseLabel="Elegir imagen"
                         accept="image/*"
-                        (change)="onFileSelected($event)"
-                        class="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-mint-500 file:px-3 file:py-2 file:text-white hover:file:bg-mint-600"
+                        [maxFileSize]="10000000"
+                        [customUpload]="true"
+                        [auto]="true"
+                        (uploadHandler)="onPhotoChosen($event, fotoPicker)"
                       />
                       <p class="mt-1 text-xs text-slate-500">JPG / PNG / WEBP (max 10 MB)</p>
                     </div>

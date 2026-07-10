@@ -23,10 +23,14 @@ import {
 
 // PrimeNG: TableModule para la tabla del listado, ButtonModule para los
 // botones de accion y TagModule para mostrar el estado de la cita con
-// colores (pendiente=info, confirmada=warn, completada=success, etc).
+// colores. ConfirmDialog y Toast para confirmar acciones importantes y
+// avisar el resultado con un mensajito flotante.
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { Appointment, AppointmentStatus } from '../../../core/models/appointment.model';
@@ -47,10 +51,11 @@ interface StatusOption {
   standalone: true,
   imports: [
     CommonModule, RouterLink, FormsModule, LucideAngularModule,
-    // Modulos PrimeNG: tabla, botones y tag para el estado
-    TableModule, ButtonModule, TagModule,
+    // Modulos PrimeNG: tabla, botones, tag, dialogo de confirmacion y toast
+    TableModule, ButtonModule, TagModule, ConfirmDialogModule, ToastModule,
   ],
   templateUrl: './appointments.component.html',
+  providers: [ConfirmationService, MessageService],
 })
 export class AppointmentsComponent implements OnInit {
   // Iconos
@@ -98,6 +103,8 @@ export class AppointmentsComponent implements OnInit {
     private userService: UserService,
     private workOrderService: WorkOrderService,
     public authService: AuthService,
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService,
   ) {}
 
   // ngOnInit se ejecuta cuando Angular crea el componente. Aca aprovecho
@@ -121,10 +128,18 @@ export class AppointmentsComponent implements OnInit {
     this.loadAppointments();
   }
 
+  /** El admin confirma una cita pendiente (con toast de resultado). */
   onConfirm(appointment: Appointment): void {
     this.appointmentService.confirm(appointment.id).subscribe({
-      next: () => this.loadAppointments(),
-      error: (err) => alert(extractErrorMessage(err, 'Error al confirmar la cita.')),
+      next: () => {
+        this.loadAppointments();
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Confirmación',
+          detail: 'La cita se ha confirmado correctamente',
+        });
+      },
+      error: (err) => this.showError(extractErrorMessage(err, 'Error al confirmar la cita.')),
     });
   }
 
@@ -132,16 +147,47 @@ export class AppointmentsComponent implements OnInit {
     const reason = prompt('Indique el motivo de la cancelación:');
     if (!reason || reason.trim().length < 3) return;
     this.appointmentService.cancel(appointment.id, reason).subscribe({
-      next: () => this.loadAppointments(),
-      error: (err) => alert(extractErrorMessage(err, 'Error al cancelar la cita.')),
+      next: () => {
+        this.loadAppointments();
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Confirmación',
+          detail: 'La cita se ha cancelado',
+        });
+      },
+      error: (err) => this.showError(extractErrorMessage(err, 'Error al cancelar la cita.')),
     });
   }
 
+  /** Inicia la atencion de la cita. Pide confirmacion antes porque este
+   *  paso crea la orden de trabajo y ya no se puede deshacer. */
   onStart(appointment: Appointment): void {
-    this.appointmentService.start(appointment.id).subscribe({
-      next: () => this.loadAppointments(),
-      error: (err) => alert(extractErrorMessage(err, 'Error al iniciar la atención.')),
+    this.confirmationService.confirm({
+      message: '¿Iniciar la atención de esta cita? Se creará la orden de trabajo para el mecánico.',
+      header: 'Confirmar inicio de atención',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Iniciar',
+      rejectLabel: 'Cancelar',
+      rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
+      accept: () => {
+        this.appointmentService.start(appointment.id).subscribe({
+          next: () => {
+            this.loadAppointments();
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Confirmación',
+              detail: 'La atención ha iniciado y se creó la orden de trabajo',
+            });
+          },
+          error: (err) => this.showError(extractErrorMessage(err, 'Error al iniciar la atención.')),
+        });
+      },
     });
+  }
+
+  /** Muestra un toast rojo con el mensaje de error (reemplaza al alert()). */
+  private showError(detail: string): void {
+    this.messageService.add({ severity: 'error', summary: 'Error', detail });
   }
 
   // ---------------------------------------------------------------------------
@@ -176,6 +222,11 @@ export class AppointmentsComponent implements OnInit {
         this.modalLoading.set(false);
         this.closeRescheduleModal();
         this.loadAppointments();
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Confirmación',
+          detail: 'La cita se ha reagendado correctamente',
+        });
       },
       error: (err) => {
         this.modalLoading.set(false);
@@ -226,6 +277,11 @@ export class AppointmentsComponent implements OnInit {
         this.modalLoading.set(false);
         this.closeAssignModal();
         this.loadAppointments();
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Confirmación',
+          detail: 'El mecánico se ha asignado correctamente',
+        });
       },
       error: (err) => {
         this.modalLoading.set(false);

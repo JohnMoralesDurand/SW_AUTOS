@@ -23,6 +23,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 import {
   BusinessHours,
@@ -37,8 +39,10 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
   imports: [
     CommonModule, FormsModule, LucideAngularModule,
     TableModule, ButtonModule, InputTextModule, InputSwitchModule, TagModule, TooltipModule,
+    ToastModule,
   ],
   templateUrl: './schedules.component.html',
+  providers: [MessageService],
 })
 export class SchedulesComponent implements OnInit {
   readonly clockIcon = Clock;
@@ -63,7 +67,10 @@ export class SchedulesComponent implements OnInit {
     'Domingo',
   ];
 
-  constructor(private scheduleService: ScheduleService) {}
+  constructor(
+    private scheduleService: ScheduleService,
+    private messageService: MessageService,
+  ) {}
 
   ngOnInit(): void {
     this.load();
@@ -127,10 +134,12 @@ export class SchedulesComponent implements OnInit {
       .subscribe({
         next: () => {
           this.savingDay.set(null);
-          this.successMessage.set(
-            `Horario de ${this.dayLabels[day.day_of_week]} guardado.`,
-          );
-          setTimeout(() => this.successMessage.set(null), 2500);
+          // Aviso flotante con el dia que se guardo
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Confirmación',
+            detail: `El horario de ${this.dayLabels[day.day_of_week]} se ha guardado correctamente`,
+          });
         },
         error: (err) => {
           this.savingDay.set(null);

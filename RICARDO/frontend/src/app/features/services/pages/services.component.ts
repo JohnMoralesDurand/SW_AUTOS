@@ -18,12 +18,16 @@ import {
   Pencil,
 } from 'lucide-angular';
 
-// PrimeNG para tabla, botones, inputs, tag y tooltip
+// PrimeNG para tabla, botones, inputs, tag y tooltip. ConfirmDialog y
+// Toast para confirmar acciones y avisar el resultado.
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
 import { Service } from '../../../core/models/service.model';
@@ -36,8 +40,10 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
   imports: [
     CommonModule, ReactiveFormsModule, LucideAngularModule,
     TableModule, ButtonModule, InputTextModule, TagModule, TooltipModule,
+    ConfirmDialogModule, ToastModule,
   ],
   templateUrl: './services.component.html',
+  providers: [ConfirmationService, MessageService],
 })
 export class ServicesComponent implements OnInit {
   // Iconos
@@ -72,6 +78,8 @@ export class ServicesComponent implements OnInit {
     private serviceCatalog: ServiceCatalogService,
     private router: Router,
     public authService: AuthService,
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService,
   ) {}
 
   ngOnInit(): void {
@@ -154,6 +162,13 @@ export class ServicesComponent implements OnInit {
         this.loading.set(false);
         this.closeForm();
         this.loadServices();
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Confirmación',
+          detail: editing
+            ? 'El servicio se ha actualizado correctamente'
+            : 'El servicio se ha creado correctamente',
+        });
       },
       error: (err) => {
         this.loading.set(false);
@@ -164,9 +179,44 @@ export class ServicesComponent implements OnInit {
     });
   }
 
+  /** Activa o desactiva un servicio del catalogo, con confirmacion previa. */
   onToggleStatus(service: Service): void {
-    this.serviceCatalog.toggleStatus(service.id).subscribe({
-      next: () => this.loadServices(),
+    const accion = service.is_active ? 'desactivar' : 'activar';
+    this.confirmationService.confirm({
+      message: `¿Está seguro que desea ${accion} el servicio "${service.name}"?`,
+      header: 'Confirmar cambio de estado',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, continuar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: service.is_active ? 'p-button-danger' : 'p-button-success',
+      rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
+      accept: () => {
+        this.serviceCatalog.toggleStatus(service.id).subscribe({
+          next: () => {
+            this.loadServices();
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Confirmación',
+              detail: `El servicio se ha ${service.is_active ? 'desactivado' : 'activado'} correctamente`,
+            });
+          },
+          error: (err) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: extractErrorMessage(err, 'No se pudo cambiar el estado.'),
+            });
+          },
+        });
+      },
+      reject: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Cancelado',
+          detail: 'No se realizó ningún cambio',
+          life: 3000,
+        });
+      },
     });
   }
 

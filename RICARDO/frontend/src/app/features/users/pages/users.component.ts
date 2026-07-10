@@ -19,10 +19,15 @@ import {
   Pencil,
 } from 'lucide-angular';
 
-// PrimeNG: la tabla del listado, botones de accion y tag para el rol
+// PrimeNG: la tabla del listado, botones de accion y tag para el rol.
+// ConfirmDialog para confirmar el cambio de estado y Toast para avisar
+// el resultado de cada accion.
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { UserService } from '../../../core/services/user.service';
 import { ServiceCatalogService } from '../../../core/services/service-catalog.service';
@@ -34,9 +39,10 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
   standalone: true,
   imports: [
     CommonModule, ReactiveFormsModule, LucideAngularModule,
-    TableModule, ButtonModule, TagModule,
+    TableModule, ButtonModule, TagModule, ConfirmDialogModule, ToastModule,
   ],
   templateUrl: './users.component.html',
+  providers: [ConfirmationService, MessageService],
 })
 export class UsersComponent implements OnInit {
   // Iconos
@@ -74,6 +80,8 @@ export class UsersComponent implements OnInit {
     private fb: FormBuilder,
     private userService: UserService,
     private serviceCatalog: ServiceCatalogService,
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService,
   ) {}
 
   ngOnInit(): void {
@@ -190,6 +198,11 @@ export class UsersComponent implements OnInit {
           this.loading.set(false);
           this.toggleForm();
           this.loadUsers();
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Confirmación',
+            detail: 'Los datos del mecánico se han actualizado correctamente',
+          });
         },
         error: (err) => {
           this.loading.set(false);
@@ -202,6 +215,11 @@ export class UsersComponent implements OnInit {
           this.loading.set(false);
           this.toggleForm();
           this.loadUsers();
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Confirmación',
+            detail: 'El mecánico se ha registrado correctamente',
+          });
         },
         error: (err) => {
           this.loading.set(false);
@@ -211,10 +229,45 @@ export class UsersComponent implements OnInit {
     }
   }
 
+  /** Activa o desactiva un usuario. Pide confirmacion con el dialogo de
+   *  PrimeNG antes de hacerlo (antes usaba el confirm() del navegador). */
   onToggleStatus(user: User): void {
-    if (!confirm(`¿Cambiar estado de ${user.first_name} ${user.last_name}?`)) return;
-    this.userService.toggleStatus(user.id).subscribe({
-      next: () => this.loadUsers(),
+    const accion = user.is_active ? 'desactivar' : 'activar';
+    this.confirmationService.confirm({
+      message: `¿Está seguro que desea ${accion} a ${user.first_name} ${user.last_name}?`,
+      header: 'Confirmar cambio de estado',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, continuar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: user.is_active ? 'p-button-danger' : 'p-button-success',
+      rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
+      accept: () => {
+        this.userService.toggleStatus(user.id).subscribe({
+          next: () => {
+            this.loadUsers();
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Confirmación',
+              detail: `El usuario se ha ${user.is_active ? 'desactivado' : 'activado'} correctamente`,
+            });
+          },
+          error: (err) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: extractErrorMessage(err, 'No se pudo cambiar el estado.'),
+            });
+          },
+        });
+      },
+      reject: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Cancelado',
+          detail: 'No se realizó ningún cambio',
+          life: 3000,
+        });
+      },
     });
   }
 

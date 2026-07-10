@@ -27,9 +27,14 @@ import {
   Trash2,
 } from 'lucide-angular';
 
-// PrimeNG para los botones y el tag de estado de la orden
+// PrimeNG: botones, tag de estado, dialogo de confirmacion, toasts y el
+// componente p-fileupload para elegir la foto del auto.
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ToastModule } from 'primeng/toast';
+import { FileUploadModule } from 'primeng/fileupload';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 import {
   WorkOrder,
@@ -48,9 +53,10 @@ import { extractErrorMessage } from '../../../core/utils/http-error';
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule, LucideAngularModule,
     // Modulos PrimeNG
-    ButtonModule, TagModule,
+    ButtonModule, TagModule, ConfirmDialogModule, ToastModule, FileUploadModule,
   ],
   templateUrl: './work-orders.component.html',
+  providers: [ConfirmationService, MessageService],
 })
 export class WorkOrdersComponent implements OnInit {
   readonly clipboardIcon = ClipboardList;
@@ -94,6 +100,8 @@ export class WorkOrdersComponent implements OnInit {
     private workOrderService: WorkOrderService,
     public authService: AuthService,
     public photoService: ServicePhotoService,
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService,
   ) {}
 
   ngOnInit(): void {
@@ -136,6 +144,11 @@ export class WorkOrdersComponent implements OnInit {
         next: () => {
           this.savingDiagnosis.set(false);
           this.load();
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Confirmación',
+            detail: 'El diagnóstico se ha guardado correctamente',
+          });
         },
         error: (err) => {
           this.savingDiagnosis.set(false);
@@ -156,6 +169,11 @@ export class WorkOrdersComponent implements OnInit {
         this.addingItem.set(false);
         this.itemForm.reset({ description: '', quantity: 1, unit_price: 0 });
         this.load();
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Confirmación',
+          detail: 'El ítem se ha agregado correctamente',
+        });
       },
       error: (err) => {
         this.addingItem.set(false);
@@ -166,21 +184,47 @@ export class WorkOrdersComponent implements OnInit {
     });
   }
 
+  /** Cierra la orden definitivamente. Como es una accion sin vuelta atras
+   *  (marca la cita como completada y avisa al cliente), primero pide
+   *  confirmacion con el dialogo de PrimeNG. */
   closeOrder(order: WorkOrder): void {
-    if (!confirm('¿Cerrar definitivamente la orden? Marcará la cita como completada.')) return;
-    this.closingOrder.set(true);
-    this.errorMessage.set(null);
-    this.workOrderService.close(order.id).subscribe({
-      next: () => {
-        this.closingOrder.set(false);
-        this.expandedId.set(null);
-        this.load();
+    this.confirmationService.confirm({
+      message: '¿Está seguro que desea cerrar la orden? Marcará la cita como completada y se notificará al cliente.',
+      header: 'Confirmar cierre de orden',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Cerrar orden',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
+      accept: () => {
+        this.closingOrder.set(true);
+        this.errorMessage.set(null);
+        this.workOrderService.close(order.id).subscribe({
+          next: () => {
+            this.closingOrder.set(false);
+            this.expandedId.set(null);
+            this.load();
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Confirmación',
+              detail: 'La orden se ha cerrado correctamente',
+            });
+          },
+          error: (err) => {
+            this.closingOrder.set(false);
+            this.errorMessage.set(
+              extractErrorMessage(err, 'No se pudo cerrar la orden.'),
+            );
+          },
+        });
       },
-      error: (err) => {
-        this.closingOrder.set(false);
-        this.errorMessage.set(
-          extractErrorMessage(err, 'No se pudo cerrar la orden.'),
-        );
+      reject: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Cancelado',
+          detail: 'La orden sigue abierta',
+          life: 3000,
+        });
       },
     });
   }
@@ -192,9 +236,16 @@ export class WorkOrdersComponent implements OnInit {
   // ===========================================================================
   // Manejo de fotos de la orden (entrada/salida del auto)
   // ===========================================================================
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0] ?? null;
+
+  /** Se dispara cuando el p-fileupload de PrimeNG elige un archivo.
+   *  Aca NO se sube todavia: solo guardo el archivo y muestro la vista
+   *  previa. La subida real ocurre al apretar "Subir foto" (asi el
+   *  mecanico primero puede elegir el tipo entrada/salida y la
+   *  descripcion). El fileUpload.clear() es para poder volver a elegir
+   *  el mismo archivo si se arrepiente. */
+  onPhotoChosen(event: { files: File[] }, fileUpload: { clear: () => void }): void {
+    const file = event.files?.[0] ?? null;
+    fileUpload.clear();
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       this.photoError.set('El archivo seleccionado no es una imagen.');
@@ -229,6 +280,11 @@ export class WorkOrdersComponent implements OnInit {
           this.uploadDescripcion.set('');
           // Recarga la lista para refrescar las fotos
           this.load();
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Confirmación',
+            detail: 'La foto se ha subido correctamente',
+          });
         },
         error: (err) => {
           this.uploadingPhoto.set(false);
@@ -239,14 +295,40 @@ export class WorkOrdersComponent implements OnInit {
       });
   }
 
+  /** Borra una foto de la orden, con confirmacion previa. */
   deletePhoto(photo: { id: number }): void {
-    if (!confirm('¿Eliminar esta foto?')) return;
-    this.photoService.delete(photo.id).subscribe({
-      next: () => this.load(),
-      error: (err) => {
-        this.photoError.set(
-          extractErrorMessage(err, 'No se pudo eliminar la foto.'),
-        );
+    this.confirmationService.confirm({
+      message: '¿Está seguro que desea eliminar esta foto?',
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary p-button-outlined',
+      accept: () => {
+        this.photoService.delete(photo.id).subscribe({
+          next: () => {
+            this.load();
+            this.messageService.add({
+              severity: 'info',
+              summary: 'Confirmación',
+              detail: 'La foto se ha eliminado correctamente',
+            });
+          },
+          error: (err) => {
+            this.photoError.set(
+              extractErrorMessage(err, 'No se pudo eliminar la foto.'),
+            );
+          },
+        });
+      },
+      reject: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Cancelado',
+          detail: 'La foto no se ha eliminado',
+          life: 3000,
+        });
       },
     });
   }

@@ -1,4 +1,7 @@
 <!-- Plantilla del feature de horarios del taller -->
+<!-- Toast de PrimeNG: aviso flotante al guardar un dia -->
+<p-toast></p-toast>
+
 <div class="space-y-6">
 
   <!-- Cabecera -->
@@ -17,12 +20,6 @@
     <div class="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
       <lucide-icon [img]="alertIcon" [size]="16"></lucide-icon>
       <span>{{ errorMessage() }}</span>
-    </div>
-  }
-  @if (successMessage()) {
-    <div class="flex items-center gap-2 rounded-xl border border-mint-200 bg-mint-50 px-4 py-2 text-sm text-mint-700">
-      <lucide-icon [img]="checkIcon" [size]="16"></lucide-icon>
-      <span>{{ successMessage() }}</span>
     </div>
   }
 
