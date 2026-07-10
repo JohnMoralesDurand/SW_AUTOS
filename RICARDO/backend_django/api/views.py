@@ -691,9 +691,16 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
             quantity=quantity,
             unit_price=unit_price,
         )
-        items_total = sum(i.quantity * i.unit_price for i in wo.items.all())
+        # Consulto los items DIRECTO a la base de datos y no con wo.items.all():
+        # como la orden vino con prefetch_related, wo.items.all() devolveria la
+        # lista cacheada de ANTES de crear el item y el total saldria sin el
+        # repuesto recien agregado.
+        items = WorkOrderItem.objects.filter(work_order=wo)
+        items_total = sum(i.quantity * i.unit_price for i in items)
         wo.total_amount = wo.appointment.frozen_price + items_total
         wo.save()
+        # Recargo la orden fresca para que la respuesta traiga el item nuevo
+        wo = WorkOrder.objects.get(id=wo.id)
         return Response(WorkOrderSerializer(wo, context={'request': request}).data)
 
     @action(detail=True, methods=['post'])
