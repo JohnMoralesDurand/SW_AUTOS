@@ -1,7 +1,10 @@
-# Script de seed para AutoServ (Django)
-# Ejecutar: python seed.py
-# Crea: 3 usuarios base + 10 mecanicos por categoria + catalogo de servicios
-#       + horarios del taller por defecto
+# seed.py
+# Script para llenar la base de datos con los datos iniciales del taller.
+# Se corre UNA vez despues de las migraciones:  python seed.py
+# Crea los 3 usuarios de prueba (admin, mecanico, cliente), varios
+# mecanicos extra de cada especialidad, el catalogo de servicios y el
+# horario de atencion por defecto. Si un dato ya existe lo salta, asi
+# que se puede correr varias veces sin duplicar nada.
 import os
 import django
 
@@ -13,7 +16,7 @@ from api.models import Bloque, Dia, DiaBloque, Service, User, UserRole  # noqa: 
 
 
 def run_seed():
-    # USUARIOS BASE
+    # Los 3 usuarios de prueba (uno por cada rol)
     users_base = [
         {'first_name': 'Carlos', 'last_name': 'Administrador',
          'dni': '00000001', 'email': 'admin@autoserv.com',
@@ -29,7 +32,7 @@ def run_seed():
          'role': UserRole.CLIENT},
     ]
 
-    # MECANICOS ADICIONALES (2 por categoria)
+    # Mecanicos extra: dos por cada especialidad del catalogo
     mechanics_extra = [
         {'first_name': 'Pedro', 'last_name': 'Sanchez', 'dni': '20000001',
          'email': 'pedro.motor@autoserv.com', 'phone': '999100001',
@@ -81,7 +84,7 @@ def run_seed():
         user.save()
         print(f'  Creado: {user.first_name} {user.last_name} ({user.specialty})')
 
-    # SERVICIOS DEL CATALOGO
+    # Catalogo de servicios que ofrece el taller
     services = [
         ('Cambio de aceite', 'Motor', 60, 80.0, 'Cambio de aceite y filtro de calidad.'),
         ('Alineamiento y balanceo', 'Suspensión', 90, 120.0, 'Alineamiento de dirección y balanceo de llantas.'),
@@ -100,8 +103,9 @@ def run_seed():
         )
         print(f'  {"Creado" if created else "Saltado"}: {s.name}')
 
-    # HORARIOS DEL TALLER (estructura Dia + Bloque + DiaBloque)
-    # Lun-Vie 8-18, Sab 8-13, Dom cerrado
+    # Horario de atencion por defecto: lunes a viernes de 8 a 18,
+    # sabado de 8 a 13 y domingo cerrado. Cada dia guarda sus bloques
+    # en la tabla intermedia DiaBloque.
     schedule = [
         (0, True,  [('08:00', '18:00')]),  # Lunes
         (1, True,  [('08:00', '18:00')]),  # Martes
