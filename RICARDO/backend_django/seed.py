@@ -1,9 +1,7 @@
-# =============================================================================
 # Script de seed para AutoServ (Django)
 # Ejecutar: python seed.py
 # Crea: 3 usuarios base + 10 mecanicos por categoria + catalogo de servicios
 #       + horarios del taller por defecto
-# =============================================================================
 import os
 import django
 
@@ -15,9 +13,7 @@ from api.models import Bloque, Dia, DiaBloque, Service, User, UserRole  # noqa: 
 
 
 def run_seed():
-    # -------------------------------------------------------------------
     # USUARIOS BASE
-    # -------------------------------------------------------------------
     users_base = [
         {'first_name': 'Carlos', 'last_name': 'Administrador',
          'dni': '00000001', 'email': 'admin@autoserv.com',
@@ -85,9 +81,7 @@ def run_seed():
         user.save()
         print(f'  Creado: {user.first_name} {user.last_name} ({user.specialty})')
 
-    # -------------------------------------------------------------------
     # SERVICIOS DEL CATALOGO
-    # -------------------------------------------------------------------
     services = [
         ('Cambio de aceite', 'Motor', 60, 80.0, 'Cambio de aceite y filtro de calidad.'),
         ('Alineamiento y balanceo', 'Suspensión', 90, 120.0, 'Alineamiento de dirección y balanceo de llantas.'),
@@ -106,10 +100,8 @@ def run_seed():
         )
         print(f'  {"Creado" if created else "Saltado"}: {s.name}')
 
-    # -------------------------------------------------------------------
     # HORARIOS DEL TALLER (estructura Dia + Bloque + DiaBloque)
     # Lun-Vie 8-18, Sab 8-13, Dom cerrado
-    # -------------------------------------------------------------------
     schedule = [
         (0, True,  [('08:00', '18:00')]),  # Lunes
         (1, True,  [('08:00', '18:00')]),  # Martes

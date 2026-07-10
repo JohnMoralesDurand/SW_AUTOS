@@ -31,18 +31,16 @@ from .serializers import (
 )
 
 
-# =============================================================================
-# Constantes de reglas de negocio
-# =============================================================================
+# Constantes de las reglas de negocio (para no repetir numeros sueltos
+# por todo el codigo)
 SLOT_INTERVAL_MINUTES = 30
 MIN_HOURS_AHEAD = 2          # RN-05
 CANCEL_GRACE_HOURS = 3       # RN-06
 MAX_ACTIVE_APPOINTMENTS = 3  # RN-07
 
 
-# =============================================================================
-# AUTH - Endpoints publicos de login y registro
-# =============================================================================
+# Login y registro. Son las unicas rutas publicas del API: cualquiera
+# puede llamarlas sin token (justamente sirven para conseguirlo).
 class RegisterView(APIView):
     """Registra un nuevo cliente. Publico (no requiere token)."""
 
@@ -156,9 +154,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response({'detail': 'Los usuarios no se eliminan, se desactivan'}, status=405)
 
 
-# =============================================================================
-# VEHICLES
-# =============================================================================
+# Vehiculos. El cliente solo maneja los suyos; el admin los ve todos.
 class VehicleViewSet(viewsets.ModelViewSet):
     serializer_class = VehicleSerializer
     permission_classes = [IsAuthenticated]
@@ -243,9 +239,9 @@ def public_services(request):
     return Response(ServiceSerializer(services, many=True).data)
 
 
-# =============================================================================
-# APPOINTMENTS - Aqui viven la mayoria de las reglas de negocio
-# =============================================================================
+# Citas. Aca vive la mayor parte de las reglas de negocio del taller:
+# horario de atencion, no solapar citas, anticipacion minima, etc.
+# Primero van las funciones ayudantes de validacion y despues el ViewSet.
 def _get_day_blocks(day_of_week: int):
     """Devuelve (is_open, [(open_time, close_time), ...]) para un dia.
 
@@ -591,9 +587,8 @@ def appointment_availability(request):
     return Response(slots)
 
 
-# =============================================================================
-# WORK ORDERS
-# =============================================================================
+# Ordenes de trabajo. Se crean solas al iniciar la atencion de una cita;
+# el mecanico registra diagnostico, repuestos y fotos, y luego la cierra.
 class WorkOrderViewSet(viewsets.ModelViewSet):
     """Ordenes de trabajo (mecanico solo ve y trabaja las suyas)."""
 
@@ -751,9 +746,8 @@ class WorkOrderViewSet(viewsets.ModelViewSet):
         return Response(WorkOrderSerializer(wo, context={'request': request}).data)
 
 
-# =============================================================================
-# NOTIFICATIONS
-# =============================================================================
+# Notificaciones. Las genera el sistema (al reservar, al completar) y el
+# usuario solo puede listarlas y marcarlas como leidas.
 class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
@@ -784,12 +778,9 @@ class NotificationViewSet(viewsets.ModelViewSet):
         return Response(NotificationSerializer(notif).data)
 
 
-# =============================================================================
-# HORARIO DEL TALLER - Dia + Bloque + DiaBloque
-# -----------------------------------------------------------------------------
-# Reemplaza al antiguo BusinessHoursViewSet. La URL sigue siendo /api/schedules
-# para no romper compatibilidad con el frontend.
-# =============================================================================
+# Horario del taller. Se guarda en 3 tablas: Dia (lunes a domingo),
+# Bloque (rangos de hora reutilizables) y DiaBloque (que bloques tiene
+# cada dia). Asi un dia puede tener horario partido (manana y tarde).
 class DiaViewSet(viewsets.ModelViewSet):
     """Horario del taller por dia (con sus bloques).
 
@@ -869,9 +860,7 @@ class DiaBloqueViewSet(viewsets.ModelViewSet):
         return [IsAdmin()]
 
 
-# =============================================================================
-# SERVICE PHOTOS (FotosServicio)
-# =============================================================================
+# Fotos de la orden de trabajo (la evidencia del estado del auto).
 class ServicePhotoViewSet(viewsets.ModelViewSet):
     """CRUD de fotos asociadas a una OrdenTrabajo (FotosServicio).
 
@@ -950,9 +939,8 @@ class ServicePhotoViewSet(viewsets.ModelViewSet):
         )
 
 
-# =============================================================================
-# REPORTS (dashboard)
-# =============================================================================
+# Reportes. Son los numeros y graficos que ve el admin en el dashboard
+# y en la pantalla de Reportes.
 @api_view(['GET'])
 @permission_classes([IsAdmin])
 def reports_summary(request):
@@ -1014,9 +1002,8 @@ def reports_top_services(request):
     return Response([{'service': s.name, 'total': s.total} for s in rows])
 
 
-# =============================================================================
-# VEHICLE HISTORY (Historial Vehicular - RF-35, RF-36)
-# =============================================================================
+# Historial vehicular: los servicios pasados de un auto y las
+# sugerencias de mantenimiento preventivo.
 KM_INTERVAL = 5000   # cada 5000 km recomendar revision
 DAYS_INTERVAL = 180  # o cada 6 meses
 

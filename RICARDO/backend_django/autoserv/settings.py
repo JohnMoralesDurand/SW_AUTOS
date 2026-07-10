@@ -12,17 +12,13 @@ from pathlib import Path
 # BASE_DIR apunta a la carpeta donde esta el manage.py
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ---------------------------------------------------------------------------
 # Seguridad
-# ---------------------------------------------------------------------------
 SECRET_KEY = 'django-insecure-autoserv-change-this-in-production-key'
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 
-# ---------------------------------------------------------------------------
 # Apps instaladas
-# ---------------------------------------------------------------------------
 INSTALLED_APPS = [
     # Mi app principal (ahi van models, views, serializers, urls)
     'api',
@@ -42,9 +38,7 @@ INSTALLED_APPS = [
 ]
 
 
-# ---------------------------------------------------------------------------
 # Middleware
-# ---------------------------------------------------------------------------
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -79,9 +73,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'autoserv.wsgi.application'
 
 
-# ---------------------------------------------------------------------------
 # Base de datos: uso SQLite por simplicidad (no necesita instalacion)
-# ---------------------------------------------------------------------------
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -101,9 +93,7 @@ USE_I18N = True
 USE_TZ = True
 
 
-# ---------------------------------------------------------------------------
 # Archivos estaticos y de medios (uploads del usuario)
-# ---------------------------------------------------------------------------
 STATIC_URL = 'static/'
 MEDIA_URL = '/uploads/'
 MEDIA_ROOT = BASE_DIR / 'uploads'
@@ -115,9 +105,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 APPEND_SLASH = False
 
 
-# ---------------------------------------------------------------------------
 # Django REST Framework + JWT
-# ---------------------------------------------------------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'api.auth.CustomJWTAuthentication',

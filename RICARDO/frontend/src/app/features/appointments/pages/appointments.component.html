@@ -125,7 +125,7 @@
   </div>
 </div>
 
-<!-- ============================== Modal: Reagendar ============================== -->
+<!-- Modal: Reagendar -->
 @if (showRescheduleModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" (click)="closeRescheduleModal()">
     <div class="card w-full max-w-md" (click)="$event.stopPropagation()">
@@ -162,7 +162,7 @@
   </div>
 }
 
-<!-- ============================== Modal: Ver detalle de cita completada ============================== -->
+<!-- Modal: Ver detalle de cita completada -->
 @if (showDetailModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" (click)="closeDetailModal()">
     <div class="card w-full max-w-2xl" (click)="$event.stopPropagation()">
@@ -286,7 +286,7 @@
   </div>
 }
 
-<!-- ============================== Modal: Asignar mecánico ============================== -->
+<!-- Modal: Asignar mecánico -->
 @if (showAssignModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" (click)="closeAssignModal()">
     <div class="card w-full max-w-md" (click)="$event.stopPropagation()">

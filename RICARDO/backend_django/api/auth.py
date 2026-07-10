@@ -1,9 +1,13 @@
-# =============================================================================
-# Autenticacion JWT personalizada
-# -----------------------------------------------------------------------------
-# Usa nuestro modelo User (no el de Django auth) para autenticar peticiones.
-# Compatible con DRF: la clase CustomJWTAuthentication se registra en settings.
-# =============================================================================
+# auth.py
+# Aca esta todo el manejo del token de sesion (JWT). Un JWT es como un
+# carnet firmado digitalmente: cuando el usuario hace login le entregamos
+# uno, y en cada peticion siguiente lo presenta en el header Authorization
+# para demostrar quien es sin tener que mandar su contrasena de nuevo.
+#
+# Uso mi propio modelo User (la tabla "users" con roles y especialidad)
+# en vez del usuario interno de Django; por eso la clase
+# CustomJWTAuthentication de abajo esta registrada en settings.py como
+# el autenticador por defecto del API.
 from datetime import datetime, timedelta, timezone
 
 import jwt

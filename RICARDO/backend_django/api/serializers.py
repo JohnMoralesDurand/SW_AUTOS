@@ -57,9 +57,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
 
-# =============================================================================
 # Vehiculo
-# =============================================================================
 class VehicleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vehicle
@@ -70,9 +68,7 @@ class VehicleSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'owner', 'created_at']
 
 
-# =============================================================================
 # Servicio
-# =============================================================================
 class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
@@ -139,9 +135,7 @@ class AppointmentCreateSerializer(serializers.Serializer):
     notes = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
 
-# =============================================================================
 # Orden de Trabajo
-# =============================================================================
 class WorkOrderItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkOrderItem
@@ -201,9 +195,7 @@ class WorkOrderSerializer(serializers.ModelSerializer):
         return obj.appointment.vehicle.license_plate if obj.appointment and obj.appointment.vehicle else None
 
 
-# =============================================================================
 # Notificacion
-# =============================================================================
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
@@ -211,9 +203,7 @@ class NotificationSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
 
-# =============================================================================
 # Horario del taller (Dia + Bloque + DiaBloque)
-# =============================================================================
 class BloqueSerializer(serializers.ModelSerializer):
     """Bloque horario individual (ej: 08:00-12:00)."""
 
@@ -277,9 +267,7 @@ class DiaSerializer(serializers.ModelSerializer):
         return last.bloque.close_time if last else None
 
 
-# =============================================================================
 # Fotos de Servicio
-# =============================================================================
 class ServicePhotoSerializer(serializers.ModelSerializer):
     """Foto vinculada a una orden de trabajo con URL absoluta para el frontend."""
 

@@ -35,7 +35,7 @@ export class ApiService {
 
   constructor(private cliente: HttpClient) { }
 
-  // ---------- Usuarios ----------
+  // Metodos para usuarios
   listarUsuarios(): Observable<usuario[]> {
     return this.cliente.get<usuario[]>(this.apiUrl + 'users');
   }
@@ -52,7 +52,7 @@ export class ApiService {
     return this.cliente.delete<void>(this.apiUrl + 'users/' + u.id);
   }
 
-  // ---------- Vehiculos ----------
+  // Metodos para vehiculos
   listarVehiculos(): Observable<vehiculo[]> {
     return this.cliente.get<vehiculo[]>(this.apiUrl + 'vehicles');
   }
@@ -69,7 +69,7 @@ export class ApiService {
     return this.cliente.delete<void>(this.apiUrl + 'vehicles/' + v.id);
   }
 
-  // ---------- Servicios del catalogo ----------
+  // Metodos para el catalogo de servicios
   listarServicios(): Observable<servicio[]> {
     return this.cliente.get<servicio[]>(this.apiUrl + 'services');
   }
@@ -86,7 +86,7 @@ export class ApiService {
     return this.cliente.delete<void>(this.apiUrl + 'services/' + s.id);
   }
 
-  // ---------- Citas ----------
+  // Metodos para citas
   // Al crear una cita mando los *_id de las FK (vehicle_id, service_id) y
   // el backend me devuelve el objeto enriquecido con los nombres ya
   // resueltos para no tener que ir a buscarlos despues.
@@ -107,7 +107,7 @@ export class ApiService {
     return this.cliente.delete<void>(this.apiUrl + 'appointments/' + c.id);
   }
 
-  // ---------- Ordenes de Trabajo ----------
+  // Metodos para ordenes de trabajo
   listarOrdenes(): Observable<ordentrabajo[]> {
     return this.cliente.get<ordentrabajo[]>(this.apiUrl + 'work-orders');
   }

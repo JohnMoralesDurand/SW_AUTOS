@@ -45,34 +45,26 @@ export class ReportsComponent implements OnInit {
   readonly refreshIcon = RefreshCw;
   readonly dollarIcon = DollarSign;
 
-  // ---------------------------------------------------------------------------
   // Estado reactivo: datos crudos descargados del backend.
-  // ---------------------------------------------------------------------------
   readonly appointmentsByDay = signal<AppointmentsByDay[]>([]);
   readonly topServices = signal<TopService[]>([]);
   readonly income = signal<IncomeReport | null>(null);
   readonly loading = signal(false);
 
-  // ---------------------------------------------------------------------------
   // Conteo total de citas en el periodo (derivado de appointmentsByDay).
   // computed() = signal calculado automaticamente cuando cambian sus dependencias.
-  // ---------------------------------------------------------------------------
   readonly totalAppointments = computed(() =>
     this.appointmentsByDay().reduce((acc, row) => acc + row.total, 0),
   );
 
-  // ---------------------------------------------------------------------------
   // Formulario reactivo para elegir rango de fechas.
   // Por defecto: ultimo mes (30 dias atras hasta hoy).
-  // ---------------------------------------------------------------------------
   readonly form = this.fb.nonNullable.group({
     start: [this.toInputDate(this.daysAgo(30)), Validators.required],
     end: [this.toInputDate(new Date()), Validators.required],
   });
 
-  // ---------------------------------------------------------------------------
   // Configuraciones de los graficos
-  // ---------------------------------------------------------------------------
 
   // Citas por dia: grafico de barras vertical.
   appointmentsChart = signal<ChartData<'bar'>>({
@@ -117,16 +109,12 @@ export class ReportsComponent implements OnInit {
     private reportService: ReportService,
   ) {}
 
-  // ---------------------------------------------------------------------------
   // ngOnInit: carga los reportes con el rango por defecto al iniciar la pagina.
-  // ---------------------------------------------------------------------------
   ngOnInit(): void {
     this.onApplyFilters();
   }
 
-  // ---------------------------------------------------------------------------
   // Aplica los filtros del formulario y consulta los 3 endpoints de reportes.
-  // ---------------------------------------------------------------------------
   onApplyFilters(): void {
     if (this.form.invalid) return;
     const start = new Date(this.form.value.start!);
@@ -180,9 +168,7 @@ export class ReportsComponent implements OnInit {
     });
   }
 
-  // ---------------------------------------------------------------------------
   // Helpers privados de fechas
-  // ---------------------------------------------------------------------------
 
   /** Devuelve una fecha N dias atras desde hoy. */
   private daysAgo(n: number): Date {

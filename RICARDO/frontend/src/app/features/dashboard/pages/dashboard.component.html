@@ -1,15 +1,12 @@
-<!-- =============================================================================
-     Plantilla del Dashboard principal
-     -----------------------------------------------------------------------------
-     Estructura:
-       1. Encabezado con saludo + boton de "Nueva cita" (solo cliente)
-       2. Tarjetas de estadisticas (solo admin)
-       3. Graficos: Top servicios + Citas por dia + Estado de citas (solo admin)
-       4. Tabla de proximas citas (todos)
-============================================================================= -->
+<!-- dashboard.component.html
+     Plantilla del Dashboard. La pantalla va en este orden:
+       1. Saludo + boton "Nueva cita" (el boton solo lo ve el cliente)
+       2. Tarjetas con los numeros del taller (solo admin)
+       3. Graficos: top servicios, citas por dia y estado (solo admin)
+       4. Tabla con las proximas citas (la ven todos) -->
 <div class="space-y-6">
 
-  <!-- ====================== 1. Encabezado y accion rapida ====================== -->
+  <!-- 1. Encabezado y accion rapida -->
   <div class="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
     <div>
       <h2 class="text-2xl font-bold text-slate-800">Resumen general</h2>
@@ -25,7 +22,7 @@
     }
   </div>
 
-  <!-- ====================== 2. Tarjetas de estadisticas (admin) ====================== -->
+  <!-- 2. Tarjetas de estadisticas (admin) -->
   @if (authService.isAdmin() && summary()) {
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
 
@@ -77,7 +74,7 @@
     </div>
   }
 
-  <!-- ====================== 3. Graficos visuales (admin) ====================== -->
+  <!-- 3. Graficos visuales (admin) -->
   @if (authService.isAdmin() && summary()) {
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
 
@@ -148,7 +145,7 @@
     </div>
   }
 
-  <!-- ====================== 4. Listado de proximas citas ====================== -->
+  <!-- 4. Listado de proximas citas -->
   <div class="card">
     <div class="mb-4 flex items-center justify-between">
       <h3 class="text-lg font-semibold text-slate-800">Proximas citas</h3>

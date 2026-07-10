@@ -233,9 +233,7 @@ export class WorkOrdersComponent implements OnInit {
     return item.quantity * item.unit_price;
   }
 
-  // ===========================================================================
   // Manejo de fotos de la orden (entrada/salida del auto)
-  // ===========================================================================
 
   /** Se dispara cuando el p-fileupload de PrimeNG elige un archivo.
    *  Aca NO se sube todavia: solo guardo el archivo y muestro la vista

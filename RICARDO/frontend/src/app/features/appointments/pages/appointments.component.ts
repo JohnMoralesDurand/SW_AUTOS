@@ -190,9 +190,7 @@ export class AppointmentsComponent implements OnInit {
     this.messageService.add({ severity: 'error', summary: 'Error', detail });
   }
 
-  // ---------------------------------------------------------------------------
   // Reagendar
-  // ---------------------------------------------------------------------------
   openRescheduleModal(appointment: Appointment): void {
     this.modalAppointment.set(appointment);
     // Inicializa el datetime-local con la fecha actual de la cita.
@@ -237,9 +235,7 @@ export class AppointmentsComponent implements OnInit {
     });
   }
 
-  // ---------------------------------------------------------------------------
   // Asignar mecánico
-  // ---------------------------------------------------------------------------
   openAssignModal(appointment: Appointment): void {
     this.modalAppointment.set(appointment);
     // Preselecciono el mecanico que ya tiene asignado (si tiene). El
@@ -292,9 +288,7 @@ export class AppointmentsComponent implements OnInit {
     });
   }
 
-  // ---------------------------------------------------------------------------
   // Ver detalle de la orden de trabajo (cita completada)
-  // ---------------------------------------------------------------------------
   openDetailModal(appointment: Appointment): void {
     this.modalAppointment.set(appointment);
     this.detailWorkOrder.set(null);
@@ -336,9 +330,7 @@ export class AppointmentsComponent implements OnInit {
     return false;
   }
 
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
+  // Funciones ayudantes para pintar los estados en la tabla
 
   /** Convierte un Date a "YYYY-MM-DDTHH:MM" para input[type=datetime-local]. */
   private toDatetimeLocal(date: Date): string {
